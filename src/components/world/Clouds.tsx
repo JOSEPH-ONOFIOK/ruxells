@@ -1,127 +1,88 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { useFrame } from "@react-three/fiber";
-import * as THREE from "three";
-import type { Points } from "three";
+import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 
 /**
- * The cloud field the tiles hang in.
+ * The clouds the rooms float in.
  *
- * Points rather than sprites or geometry: a few hundred soft dots at varying
- * depth give the parallax that tells you the tiles are in a space, and they
- * cost one draw call. The artwork already carries its own painted clouds, so
- * this only has to suggest depth around them rather than compete.
+ * Cut from the artwork itself rather than drawn fresh — the collection's own
+ * frames have hand-painted cloud banks around every tile, with the same
+ * chunky outline and highlight as the rooms. Anything I invented would sit
+ * next to the art rather than belong to it.
+ *
+ * They live in the DOM over the canvas, not in the 3D scene. A cloud is a
+ * flat pixel sprite that should stay pin-sharp and never take perspective,
+ * which is exactly what a positioned image does for free and what a textured
+ * quad has to be fought into.
  */
 
-const COUNT = 420;
-const SPREAD = 46;
+type Drifter = {
+  src: string;
+  /** Viewport width, so they scale with the page rather than the device. */
+  width: string;
+  top: string;
+  /** Seconds for one crossing. Slower reads as further away. */
+  duration: number;
+  delay: number;
+  opacity: number;
+  /** Right to left, for the ones meant to read as nearer. */
+  reverse?: boolean;
+};
 
-export function Clouds({
-  dimmed,
-  lite = false,
-}: {
-  dimmed: boolean;
-  /** Fewer, and no additive blending, on a phone. */
-  lite?: boolean;
-}) {
-  // Additive blending on hundreds of overlapping sprites is a fill-rate
-  // cost a phone pays on every frame, so lite draws a third as many and
-  // composites them normally.
-  const count = lite ? Math.round(COUNT / 3) : COUNT;
-  const points = useRef<Points>(null);
+const DRIFTERS: Drifter[] = [
+  { src: "/brand/clouds.png", width: "38vw", top: "12%", duration: 116, delay: 0, opacity: 0.16 },
+  { src: "/brand/clouds-2.png", width: "52vw", top: "34%", duration: 84, delay: -30, opacity: 0.22, reverse: true },
+  { src: "/brand/clouds-3.png", width: "30vw", top: "58%", duration: 140, delay: -70, opacity: 0.13 },
+  { src: "/brand/clouds-2.png", width: "44vw", top: "78%", duration: 98, delay: -55, opacity: 0.18, reverse: true },
+];
 
-  const { positions, sizes } = useMemo(() => {
-    const positions = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-
-    // A seeded generator rather than Math.random(): the field is derived
-    // state, so it has to come out identical on every evaluation. With
-    // Math.random() a re-render would deal a different sky, and React is
-    // free to re-run a memo whenever it likes.
-    let seed = 0x9e3779b9;
-    const rand = () => {
-      seed ^= seed << 13;
-      seed ^= seed >>> 17;
-      seed ^= seed << 5;
-      return ((seed >>> 0) % 100000) / 100000;
-    };
-
-    for (let i = 0; i < count; i++) {
-      // Biased toward the edges and the back, so the middle of the field —
-      // where the tiles live — stays readable.
-      const r = SPREAD * (0.35 + rand() * 0.65);
-      const theta = rand() * Math.PI * 2;
-
-      positions[i * 3] = Math.cos(theta) * r;
-      positions[i * 3 + 1] = (rand() - 0.5) * SPREAD * 0.7;
-      positions[i * 3 + 2] = Math.sin(theta) * r - 10;
-
-      sizes[i] = 0.4 + rand() * 2.6;
-    }
-
-    return { positions, sizes };
-  }, [count]);
-
-  const texture = useMemo(() => {
-    // A soft round dot, drawn once into a canvas. Cheaper than shipping an
-    // image and it scales with whatever the device pixel ratio turns out
-    // to be.
-    const size = 64;
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext("2d")!;
-
-    const gradient = ctx.createRadialGradient(
-      size / 2,
-      size / 2,
-      0,
-      size / 2,
-      size / 2,
-      size / 2,
-    );
-    gradient.addColorStop(0, "rgba(255,255,255,0.5)");
-    gradient.addColorStop(0.5, "rgba(255,255,255,0.12)");
-    gradient.addColorStop(1, "rgba(255,255,255,0)");
-
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, size, size);
-
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }, []);
-
-  useFrame((state, delta) => {
-    if (!points.current) return;
-    // A slow yaw, so the field never reads as static even when nothing is
-    // being touched. Frame-rate independent, or it doubles on a 120Hz screen.
-    points.current.rotation.y += delta * 0.012;
-
-    const material = points.current.material as THREE.PointsMaterial;
-    const target = dimmed ? 0.1 : 0.32;
-    material.opacity += (target - material.opacity) * 0.05;
-  });
+export function Clouds() {
+  const reduced = useReducedMotion();
 
   return (
-    <points ref={points}>
-      <bufferGeometry>
-        <bufferAttribute
-          attach="attributes-position"
-          args={[positions, 3]}
-        />
-        <bufferAttribute attach="attributes-size" args={[sizes, 1]} />
-      </bufferGeometry>
-      <pointsMaterial
-        map={texture}
-        size={2.4}
-        sizeAttenuation
-        transparent
-        opacity={0.32}
-        depthWrite={false}
-        blending={lite ? THREE.NormalBlending : THREE.AdditiveBlending}
-        toneMapped={false}
-      />
-    </points>
+    <div
+      aria-hidden
+      // Between the canvas and the page content: the clouds pass in front of
+      // the rooms, which is what puts the rooms *inside* the weather rather
+      // than pasted on top of a backdrop.
+      className="pointer-events-none fixed inset-0 z-[5] overflow-hidden"
+    >
+      {DRIFTERS.map((d, i) => (
+        <motion.div
+          key={i}
+          className="absolute"
+          style={{ top: d.top, width: d.width, opacity: d.opacity }}
+          initial={{ x: d.reverse ? "100vw" : "-60vw" }}
+          animate={
+            reduced
+              ? // Held still rather than hidden: the clouds are part of the
+                // composition, and removing them leaves the page emptier
+                // than the preference asks for.
+                { x: d.reverse ? "60vw" : "20vw" }
+              : { x: d.reverse ? "-60vw" : "100vw" }
+          }
+          transition={
+            reduced
+              ? { duration: 0 }
+              : {
+                  duration: d.duration,
+                  delay: d.delay,
+                  repeat: Infinity,
+                  ease: "linear",
+                }
+          }
+        >
+          <Image
+            src={d.src}
+            alt=""
+            width={424}
+            height={135}
+            sizes="50vw"
+            className="pixelated h-auto w-full"
+          />
+        </motion.div>
+      ))}
+    </div>
   );
 }

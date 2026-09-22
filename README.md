@@ -12,17 +12,20 @@ react-three-fiber / three · framer-motion · react-icons
 
 ## The site
 
-`/` is the map. Six rooms from the collection float in cloud space as textured
-planes in a real 3D scene; the camera orbits the field on its own, leans with
-the pointer, and flies to a room when one is picked. There is no scrolling
-page under it — the rooms, the clock and the door are all in one view.
+`/` is a descent. Six rooms are stacked on one vertical track behind the page,
+and scrolling lowers you past them; each room's caption is an ordinary block
+in the document flow beside it.
+
+An earlier version orbited the six rooms as floating tiles you clicked. It
+looked good and tested badly: people had to work out that the tiles were
+clickable and that the camera could be steered before anything happened. The
+3D here is decoration over a document instead of an interface to learn, so
+the scrollbar, keyboard, trackpad and screen readers all work untouched.
 
 | Piece | File | What it does |
 | --- | --- | --- |
-| World | [World.tsx](src/components/world/World.tsx) | The canvas, the layout of the six tiles, and the HTML over it |
-| Tile | [Tile.tsx](src/components/world/Tile.tsx) | One room: its sprite-sheet animation, float, hover and focus states |
-| Rig | [Rig.tsx](src/components/world/Rig.tsx) | The camera — free orbit, flight to a tile, and the phone-aspect fit |
-| Clouds | [Clouds.tsx](src/components/world/Clouds.tsx) | The point field the tiles hang in |
+| World | [World.tsx](src/components/world/World.tsx) | The page, the fixed canvas, and the section per room |
+| Shaft | [Shaft.tsx](src/components/world/Shaft.tsx) | The stack of rooms and the scroll-driven slide |
 
 WebGL can't render on the server, so the whole world is behind a
 `ssr: false` dynamic import in [WorldStage.tsx](src/components/WorldStage.tsx).
@@ -58,13 +61,11 @@ behind it, a large tablet may not.
 
 | | full | lite |
 | --- | --- | --- |
-| Tiles | 40-frame sheet | one 192px still |
+| Rooms | 40-frame sheet | one 192px still |
 | Texture VRAM | ~60MB | ~0.8MB |
 | Download | 14MB | 344KB |
 | Pixel ratio | up to 2 | 1 |
 | Antialiasing | on | off |
-| Clouds | 420, additive | 140, normal |
-| Frame rate | 60 | 30 |
 
 The VRAM figure is what actually matters: six 2048x1280 sheets decode to more
 than a mid-range phone hands a browser tab, and the symptom is a permanently

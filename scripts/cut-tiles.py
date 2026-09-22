@@ -25,7 +25,8 @@ a texture does not reliably do.
 Usage:  python3 scripts/cut-tiles.py
 Writes: public/sectors/<n>-tile.png   (a COLS x ROWS sheet)
         public/sectors/<n>-tile.json  (its frame count and grid)
-        public/sectors/<n>-still.png  (one frame, for phones)
+        public/sectors/<n>-tile-sm.png  (the same sheet, phone sized)
+        public/sectors/<n>-still.png    (one frame, for reduced motion)
 """
 
 import json
@@ -64,6 +65,14 @@ COLS = 8
 # 0.15MB decoded, and still above what a phone screen resolves at the size a
 # tile is actually drawn.
 STILL_SIZE = 192
+
+# The phone build: the same frames at a smaller cell.
+#
+# A full sheet decodes to about 10MB of VRAM and six is more than a mid-range
+# phone hands a browser tab. At 112 a cell the sheet is 896x560, or 2MB
+# decoded, so phones keep the animation rather than being handed a frozen
+# frame.
+SMALL_SIZE = 112
 
 
 def close_enough(a, b, tol=TOLERANCE):
@@ -183,7 +192,31 @@ def build(path: Path, out_png: Path, out_json: Path) -> tuple[int, float]:
 
     sheet.save(out_png, "PNG", optimize=True)
 
-    # The phone build: frame 0 on its own.
+    # The phone build: the same sheet at a smaller cell.
+    small = Image.new(
+        "RGBA", (COLS * SMALL_SIZE, rows * SMALL_SIZE), (0, 0, 0, 0)
+    )
+    for i, frame in enumerate(frames):
+        small.paste(
+            frame.resize((SMALL_SIZE, SMALL_SIZE), Image.LANCZOS),
+            ((i % COLS) * SMALL_SIZE, (i // COLS) * SMALL_SIZE),
+        )
+    small_png = out_png.with_name(out_png.name.replace("-tile.png", "-tile-sm.png"))
+    small.save(small_png, "PNG", optimize=True)
+    small_png.with_suffix(".json").write_text(
+        json.dumps(
+            {
+                "frames": len(frames),
+                "cols": COLS,
+                "rows": rows,
+                "size": SMALL_SIZE,
+                "fps": round(24 / FRAME_STEP, 2),
+            }
+        )
+        + "\n"
+    )
+
+    # Reduced motion, and the poster: frame 0 on its own.
     frames[0].resize((STILL_SIZE, STILL_SIZE), Image.LANCZOS).save(
         out_png.with_name(out_png.name.replace("-tile.png", "-still.png")),
         "PNG",

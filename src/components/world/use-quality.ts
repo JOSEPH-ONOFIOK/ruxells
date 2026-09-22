@@ -5,11 +5,11 @@ import { useSyncExternalStore } from "react";
 /**
  * How much this device should be asked to draw.
  *
- * "lite" swaps the animated sprite sheets for single stills, drops the cloud
- * count and caps the pixel ratio. The sheets decode to roughly 10MB of VRAM
- * each and six of them is more than a mid-range phone hands a browser tab
- * without thrashing, which is felt as a permanently janky camera rather than
- * a slow load.
+ * "lite" swaps the full sprite sheets for phone-sized ones and caps the pixel
+ * ratio; "still" drops the animation entirely. The full sheets decode to
+ * roughly 10MB of VRAM each and six of them is more than a mid-range phone
+ * hands a browser tab without thrashing, which is felt as a permanently
+ * janky camera rather than a slow load.
  *
  * The test is capability, not width. A narrow window on a desktop has a real
  * GPU behind it and should keep the animation; a large tablet on mobile
@@ -23,7 +23,7 @@ import { useSyncExternalStore } from "react";
  * every time a new device ships.
  */
 
-export type Quality = "full" | "lite";
+export type Quality = "full" | "lite" | "still";
 
 function detect(): Quality {
   if (typeof window === "undefined") return "full";
@@ -33,9 +33,11 @@ function detect(): Quality {
   // Unknown reports as 0 on some browsers; treat that as "not many".
   const cores = navigator.hardwareConcurrency || 4;
 
-  if (reduced) return "lite";
-  // A touch device with 8+ cores is a recent flagship and copes; below that
-  // the sheets cost more than the animation is worth.
+  // Reduced motion is the one case that genuinely wants no animation.
+  if (reduced) return "still";
+  // A touch device with 8+ cores is a recent flagship and copes with the
+  // full sheets; below that it gets the small ones, which keep the rooms
+  // moving at a fifth of the texture memory.
   if (coarse && cores < 8) return "lite";
   return "full";
 }

@@ -119,89 +119,63 @@ export function ClearanceForm({
 
   return (
     <div className="space-y-4">
-      {/* --- status strip -------------------------------------------- */}
-      <div className="flex items-stretch gap-px bg-line">
-        <div className="flex-1 bg-panel px-4 py-3">
-          <p className="eyebrow text-ash/60">Through the door</p>
-          <p className="wordmark mt-1 text-xl text-lime tabular-nums">
-            {count === null ? "..." : count.toLocaleString()}
-          </p>
-        </div>
-        <div className="flex-1 bg-panel px-4 py-3 text-right">
-          <p className="eyebrow text-ash/60">
-            {closed ? "Door" : "Closes in"}
-          </p>
-          <p className="wordmark mt-1 text-xl tabular-nums text-chalk">
-            {closed ? (
-              <span className="text-ash">Shut</span>
-            ) : left ? (
-              `${pad(left.hours)}:${pad(left.minutes)}:${pad(left.seconds)}`
-            ) : (
-              <span className="text-ash/40">--:--:--</span>
-            )}
-          </p>
-        </div>
-      </div>
-
-      {/* --- connect X ------------------------------------------------ */}
-      {x.configured && (
-        <div className="panel flex items-center justify-between gap-3 p-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <FaXTwitter className="h-4 w-4 shrink-0 text-chalk" />
-            {x.connected ? (
-              <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-chalk">
-                  @{x.username}
-                </p>
-                <p className="eyebrow mt-0.5 text-lime">Identity confirmed</p>
-              </div>
-            ) : (
-              <div>
-                <p className="text-sm font-bold text-chalk">
-                  Connect X to unlock the steps
-                </p>
-                <p className="mt-0.5 text-[11px] text-ash">
-                  Read-only. We never post for you.
-                </p>
-              </div>
-            )}
-          </div>
-
-          {x.connected ? (
-            <button
-              type="button"
-              onClick={x.disconnect}
-              className="shrink-0 border border-line px-3 py-1.5 text-[11px] font-bold tracking-wider text-ash uppercase transition-colors hover:border-lime hover:text-lime"
-            >
-              Disconnect
-            </button>
-          ) : (
-            <a
-              href="/api/x/login"
-              className="shrink-0 border border-lime bg-lime px-4 py-2 text-[11px] font-bold tracking-wider text-void uppercase transition-colors hover:bg-transparent hover:text-lime"
-            >
-              Connect X
-            </a>
-          )}
-        </div>
-      )}
-
       {oauthStatus && OAUTH_MESSAGES[oauthStatus] && (
         <p className="border border-red-500/40 bg-red-500/10 p-3 text-xs font-semibold text-red-300">
           {OAUTH_MESSAGES[oauthStatus]}
         </p>
       )}
 
-      {/* --- the steps ------------------------------------------------ */}
-      <div className={needsConnect ? "pointer-events-none opacity-40" : ""}>
-        <Quests
-          state={quests}
-          onChange={setQuests}
-          username={x.username}
-          check={quoteCheck}
-          onCheckChange={setQuoteCheck}
-        />
-      </div>
+      {/* --- the terminal --------------------------------------------- */}
+      {/* The status strip and the connect panel used to be two more blocks
+          stacked above this one. They are both the door's state, so they
+          now render inside its header instead of queueing in front of it. */}
+      <Quests
+        state={quests}
+        onChange={setQuests}
+        username={x.username}
+        check={quoteCheck}
+        onCheckChange={setQuoteCheck}
+        count={count}
+        locked={needsConnect}
+        clock={
+          closed
+            ? "Door shut"
+            : left
+              ? `${pad(left.hours)}:${pad(left.minutes)}:${pad(left.seconds)}`
+              : undefined
+        }
+        account={
+          x.configured ? (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-2">
+                <FaXTwitter className="h-3.5 w-3.5 shrink-0 text-ash" />
+                <p className="truncate text-[11px] text-ash">
+                  {x.connected
+                    ? "Identity confirmed"
+                    : "Connect X to open the channels"}
+                </p>
+              </div>
+
+              {x.connected ? (
+                <button
+                  type="button"
+                  onClick={x.disconnect}
+                  className="shrink-0 text-[10px] font-bold tracking-wider text-ash uppercase transition-colors hover:text-lime"
+                >
+                  Disconnect
+                </button>
+              ) : (
+                <a
+                  href="/api/x/login"
+                  className="shrink-0 border border-lime bg-lime px-3 py-1.5 text-[10px] font-bold tracking-wider text-void uppercase transition-colors hover:bg-transparent hover:text-lime"
+                >
+                  Connect
+                </a>
+              )}
+            </div>
+          ) : undefined
+        }
+      />
 
       {/* --- the seal ------------------------------------------------- */}
       <form onSubmit={handleSubmit} className="panel ticked relative p-4">
@@ -235,8 +209,8 @@ export function ClearanceForm({
                 initial={false}
                 exit={{ opacity: 0, transition: { duration: 0.2 } }}
               >
-                <FiLock className="h-3.5 w-3.5 text-ash/60" />
-                <p className="eyebrow text-ash/60">Sealed</p>
+                <FiLock className="h-3.5 w-3.5 text-ash" />
+                <p className="eyebrow text-lime-dim">Sealed</p>
               </motion.div>
             </>
           )}
@@ -256,7 +230,7 @@ export function ClearanceForm({
           placeholder="0x…"
           disabled={!questsReady}
           aria-invalid={wallet.length > 0 && !walletValid}
-          className={`mt-2 w-full border bg-void px-3 py-3 font-mono text-sm text-chalk outline-none placeholder:text-ash/30 disabled:cursor-not-allowed ${
+          className={`mt-2 w-full border bg-void px-3 py-3 font-mono text-sm text-chalk outline-none placeholder:text-ash disabled:cursor-not-allowed ${
             wallet.length > 0 && !walletValid
               ? "border-red-500/60"
               : walletValid
@@ -278,7 +252,7 @@ export function ClearanceForm({
         <button
           type="submit"
           disabled={!canSubmit}
-          className="mt-4 w-full border border-lime bg-lime py-3 text-xs font-bold tracking-widest text-void uppercase transition-colors enabled:hover:bg-transparent enabled:hover:text-lime disabled:cursor-not-allowed disabled:border-line disabled:bg-transparent disabled:text-ash/40"
+          className="mt-4 w-full border border-lime bg-lime py-3 text-xs font-bold tracking-widest text-void uppercase transition-colors enabled:hover:bg-transparent enabled:hover:text-lime disabled:cursor-not-allowed disabled:border-line disabled:bg-transparent disabled:text-ash"
         >
           {status === "submitting" ? "Submitting…" : "Submit for clearance"}
         </button>

@@ -22,13 +22,16 @@ export type Sector = {
   tile: string;
 
   /**
-   * One frame of the same room, for phones.
+   * The same room, at phone size.
    *
-   * The sheets decode to roughly 10MB of VRAM each, and six of those is more
-   * than a mid-range phone will give a browser tab without thrashing. The
-   * still is 192px, which is 0.15MB decoded and still above what a phone
-   * screen resolves at the size a tile is drawn.
+   * A full sheet decodes to about 10MB of VRAM and six of those is more than
+   * a mid-range phone hands a browser tab. This one is the same forty frames
+   * at 112px a cell — 2MB decoded — so phones keep the animation instead of
+   * being given a frozen frame.
    */
+  tileSm: string;
+
+  /** A single frame, for reduced-motion and as the poster. */
   still: string;
   /** Dominant colour of the artwork — drives the card's rim light. */
   tint: string;
@@ -65,7 +68,19 @@ export const DROP = {
 /** The headline the drop is announced with. */
 export const DROP_PITCH = {
   title: "The gate is open",
-  line: "Free mint",
+  line: "Free mint on Robinhood",
+} as const;
+
+/**
+ * The chain, for the facts block.
+ *
+ * Robinhood Chain is EVM, which is why the wallet field validates a 0x
+ * address — if this ever moves to a non-EVM chain, `ETH_ADDRESS_RE` in the
+ * allowlist route and the clearance form both have to change with it.
+ */
+export const CHAIN = {
+  name: "Robinhood",
+  kind: "EVM",
 } as const;
 
 /**
@@ -79,8 +94,9 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 01",
     name: "The Holding Bay",
     tile: "/sectors/01-tile.png",
+    tileSm: "/sectors/01-tile-sm.png",
     still: "/sectors/01-still.png",
-    tint: "#8f9aa3",
+    tint: "#6f9ce0",
     blurb:
       "Concrete, chain-link and crates nobody will open. Everyone starts here.",
     intel: [
@@ -90,41 +106,43 @@ export const SECTORS: Sector[] = [
     ],
   },
   {
-    id: "vault",
+    id: "lab",
     code: "SECTOR 02",
-    name: "The Lava Vault",
+    name: "The Cold Lab",
     tile: "/sectors/02-tile.png",
+    tileSm: "/sectors/02-tile-sm.png",
     still: "/sectors/02-still.png",
-    tint: "#ff6a2b",
-    blurb:
-      "Something green is sealed in the glass and the floor has cracked around it.",
+    tint: "#3a2a6e",
+    blurb: "Whatever they built in here is still humming, and still cold.",
     intel: [
-      ["Status", "Unstable"],
-      ["Containment", "Holding"],
-      ["Occupants", "Eight"],
+      ["Status", "Running"],
+      ["Temp", "Below"],
+      ["Occupants", "Seven"],
     ],
   },
   {
-    id: "arcade",
+    id: "pitch",
     code: "SECTOR 03",
-    name: "The Greenhouse",
+    name: "The Pitch",
     tile: "/sectors/03-tile.png",
+    tileSm: "/sectors/03-tile-sm.png",
     still: "/sectors/03-still.png",
-    tint: "#7bc86c",
-    blurb: "One working cabinet, still lit, halfway buried in vines.",
+    tint: "#429ba3",
+    blurb: "Someone marked out a field down here. Both sides turned up.",
     intel: [
-      ["Status", "Overgrown"],
-      ["Power", "One socket"],
-      ["Occupants", "Five"],
+      ["Status", "In play"],
+      ["Score", "Nil all"],
+      ["Occupants", "Fourteen"],
     ],
   },
   {
     id: "rig",
     code: "SECTOR 04",
-    name: "Cold Storage",
+    name: "The Deep Freeze",
     tile: "/sectors/04-tile.png",
+    tileSm: "/sectors/04-tile-sm.png",
     still: "/sectors/04-still.png",
-    tint: "#7fd4e8",
+    tint: "#429ba3",
     blurb: "The rigs never stopped running. The bears moved in anyway.",
     intel: [
       ["Status", "Running"],
@@ -133,31 +151,33 @@ export const SECTORS: Sector[] = [
     ],
   },
   {
-    id: "canyon",
-    code: "SECTOR 05",
-    name: "The Red Canyon",
-    tile: "/sectors/05-tile.png",
-    still: "/sectors/05-still.png",
-    tint: "#c65f5f",
-    blurb: "Open ground, high rocks, and one lamp that somebody keeps lit.",
-    intel: [
-      ["Status", "Exposed"],
-      ["Cover", "Thin"],
-      ["Occupants", "Ten"],
-    ],
-  },
-  {
     id: "tomb",
-    code: "SECTOR 06",
+    code: "SECTOR 05",
     name: "The Dig",
     tile: "/sectors/06-tile.png",
+    tileSm: "/sectors/06-tile-sm.png",
     still: "/sectors/06-still.png",
-    tint: "#f5c344",
+    tint: "#a93cfa",
     blurb: "They found the pyramid first and the door underneath it second.",
     intel: [
       ["Status", "Restricted"],
       ["Depth", "Unlogged"],
       ["Occupants", "Seven"],
+    ],
+  },
+  {
+    id: "canyon",
+    code: "SECTOR 06",
+    name: "The Red Canyon",
+    tile: "/sectors/05-tile.png",
+    tileSm: "/sectors/05-tile-sm.png",
+    still: "/sectors/05-still.png",
+    tint: "#2cfe53",
+    blurb: "Open ground, high rocks, and one lamp that somebody keeps lit.",
+    intel: [
+      ["Status", "Exposed"],
+      ["Cover", "Thin"],
+      ["Occupants", "Ten"],
     ],
   },
 ];

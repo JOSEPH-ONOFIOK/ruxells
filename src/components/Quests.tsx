@@ -2,8 +2,8 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { FiArrowUpRight, FiLoader } from "react-icons/fi";
+import { AnimatePresence, motion } from "framer-motion";
+import { FiArrowUpRight, FiCheck, FiLoader, FiLock } from "react-icons/fi";
 import {
   PINNED_POST_ID,
   QUESTS,
@@ -15,19 +15,19 @@ import {
 } from "@/lib/quests";
 
 /**
- * The four steps, as a security terminal running an authorisation sequence.
+ * The four steps.
  *
- * Not a checklist. Each step is a channel the door is testing, and the panel
- * reports on them the way a machine would: a status word, a signal bar, and a
- * line of log output that accumulates as things happen. What a guest does is
- * identical to ticking boxes — the difference is that the page behaves like
- * something being convinced rather than a form being filled.
+ * An earlier version dressed each step as a "channel" the door was testing,
+ * with codenames, signal meters and a running log. People had to learn a
+ * private vocabulary — that ESCORT meant tag three friends — before they
+ * could do anything, so the theme became a barrier rather than flavour. The
+ * steps now say what they are and the styling carries the brand.
  *
  * The quote step is still the real gate: it is the only one X lets us check,
- * so it is verified against the live post and every step after it stays sealed
- * until it passes. The attestation steps before it are declared by the guest —
- * there is no way to read a follow or a like on the free tier — but they can't
- * be used to skip the part that is enforced.
+ * so it is verified against the live post and every step after it stays
+ * locked until it passes. The steps before it are declared by the guest —
+ * there is no way to read a follow or a like on the free tier — but they
+ * can't be used to skip the part that is enforced.
  */
 
 /** Index of the step that must verify before the rest unlock. */
@@ -39,37 +39,51 @@ export type QuoteCheck =
   | { state: "ok" }
   | { state: "bad"; reason: string };
 
-/** The channel each step is testing, in the terminal's own vocabulary. */
-const CHANNEL: Record<QuestId, string> = {
-  follow: "IDENT",
-  boost: "SIGNAL",
-  quote: "BROADCAST",
-  tag: "ESCORT",
-};
-
 export function Quests({
   state,
   onChange,
   username,
   check,
   onCheckChange,
+  account,
+  count,
+  clock,
+  locked,
 }: {
   state: QuestState;
   onChange: (next: QuestState) => void;
   username?: string;
   check: QuoteCheck;
   onCheckChange: (next: QuoteCheck) => void;
+  /** The connect-X control, rendered into the header rather than above it. */
+  account?: React.ReactNode;
+  /** How many are already through, for the header's right column. */
+  count?: number | null;
+  /** The countdown, already formatted. */
+  clock?: string;
+  /** Dims the channels until X is connected; the header stays lit. */
+  locked?: boolean;
 }) {
   const gateCleared = check.state === "ok";
   const done = QUESTS.filter((q) => isQuestDone(q.id, state, username)).length;
 
   return (
     <div className="panel ticked overflow-hidden">
-      <Readout done={done} total={QUESTS.length} />
+      <Header
+        done={done}
+        total={QUESTS.length}
+        username={username}
+        account={account}
+        count={count}
+        clock={clock}
+      />
 
-      <Log state={state} username={username} check={check} />
-
-      <ol>
+      <ol
+        // Inert rather than faded out: the reason they are unavailable is
+        // stated in the header, so hiding the steps only makes the page
+        // harder to read while someone decides whether to connect.
+        className={locked ? "pointer-events-none opacity-70" : undefined}
+      >
         {QUESTS.map((quest, i) => (
           <Channel
             key={quest.id}
@@ -89,85 +103,53 @@ export function Quests({
 }
 
 /**
- * The door's log.
+ * One band instead of four.
  *
- * Lines are derived from the current state rather than appended as events
- * happen — so the log is correct after a reload, after the OAuth round trip,
- * and after a step is un-ticked, none of which an append-only list survives.
- * It reads as a machine talking to itself, which is the whole point: the page
- * should feel like something responding rather than a form being filled.
+ * The status strip, the connect control and the progress bar each used to
+ * own a horizontal band, which put several of them between the top of the
+ * page and the first thing anyone could actually do. They are all the same
+ * thing — how far along you are — so they read as one line with the bar
+ * under it.
  */
-function Log({
-  state,
+function Header({
+  done,
+  total,
   username,
-  check,
+  account,
+  count,
+  clock,
 }: {
-  state: QuestState;
+  done: number;
+  total: number;
   username?: string;
-  check: QuoteCheck;
+  account?: React.ReactNode;
+  count?: number | null;
+  clock?: string;
 }) {
-  const lines: string[] = ["door: awaiting authorisation"];
-
-  if (username) lines.push(`ident: @${username} confirmed`);
-
-  for (const quest of QUESTS) {
-    if (isQuestDone(quest.id, state, username)) {
-      lines.push(`${CHANNEL[quest.id].toLowerCase()}: clear`);
-    }
-  }
-
-  if (check.state === "checking") lines.push("broadcast: reading post…");
-  if (check.state === "bad") lines.push(`broadcast: rejected`);
-
-  const all = QUESTS.every((q) => isQuestDone(q.id, state, username));
-  if (all && check.state === "ok") lines.push("door: seal released");
-
-  // Only the tail is shown — this is a status strip, not a transcript, and a
-  // panel that grows as you work pushes the wallet field off the screen.
-  const tail = lines.slice(-3);
-
   return (
-    <div className="border-b border-line bg-void px-4 py-2.5">
-      {tail.map((line, i) => (
-        <p
-          key={line}
-          className={`font-mono text-[10px] leading-relaxed ${
-            i === tail.length - 1 ? "text-ash" : "text-ash/35"
-          }`}
-        >
-          <span className="text-lime/50">&gt;</span> {line}
-          {i === tail.length - 1 && (
-            <span className="caret ml-1 text-lime">▌</span>
+    <div className="border-b border-line bg-raised">
+      <div className="flex items-center justify-between gap-3 px-4 pt-3">
+        <p className="eyebrow truncate text-ash">
+          {username ? (
+            <span className="text-lime">@{username}</span>
+          ) : (
+            "Authorisation"
           )}
         </p>
-      ))}
-    </div>
-  );
-}
 
-/**
- * The header: four bars, one per channel, and a status word.
- *
- * The bars are the progress indicator — a count of four is small enough that
- * a number would be less legible than the shape of it.
- */
-function Readout({ done, total }: { done: number; total: number }) {
-  const all = done === total;
-
-  return (
-    <div className="border-b border-line bg-raised px-4 py-3">
-      <div className="flex items-center justify-between gap-4">
-        <p className="eyebrow text-ash">Authorisation</p>
-        <p
-          className={`eyebrow transition-colors ${
-            all ? "text-lime" : "text-ash/60"
-          }`}
-        >
-          {all ? "All channels clear" : `${done} of ${total} clear`}
-        </p>
+        <div className="flex shrink-0 items-center gap-3">
+          {typeof count === "number" && (
+            <p className="eyebrow text-ash tabular-nums">
+              {count.toLocaleString()} through
+            </p>
+          )}
+          {clock && <p className="eyebrow text-chalk tabular-nums">{clock}</p>}
+        </div>
       </div>
 
-      <div className="mt-2.5 flex gap-1" aria-hidden>
+      {/* The bar carries the count, so the "2 of 4" text it used to sit
+          under is gone: the shape says it faster than the words did. */}
+      <div className="mt-2.5 flex gap-1 px-4" aria-hidden>
         {Array.from({ length: total }, (_, i) => (
           <div key={i} className="h-1 flex-1 overflow-hidden bg-line">
             <motion.div
@@ -180,6 +162,10 @@ function Readout({ done, total }: { done: number; total: number }) {
           </div>
         ))}
       </div>
+
+      {account && (
+        <div className="border-t border-line/60 px-4 py-2.5">{account}</div>
+      )}
     </div>
   );
 }
@@ -205,7 +191,6 @@ function Channel({
 }) {
   const done = isQuestDone(quest.id, state, username);
   const link = questLinkFor(quest.id, PINNED_POST_ID);
-  const reduced = useReducedMotion();
 
   // A channel opens when it is reached and closes once it is clear, so the
   // panel only ever shows the step actually being worked on. Overridable —
@@ -219,90 +204,51 @@ function Channel({
     wasDone.current = done;
   }, [done]);
 
-  const status = sealed
-    ? "SEALED"
-    : done
-      ? "CLEAR"
-      : check.state === "checking" && quest.needsLink
-        ? "READING"
-        : "OPEN";
-
   return (
     <li
       className={`relative border-b border-line last:border-b-0 transition-colors ${
         sealed ? "bg-void" : done ? "bg-lime/[0.04]" : ""
       }`}
     >
-      {/* The lime spine marks a cleared channel down the left edge. */}
-      <motion.div
-        aria-hidden
-        className="absolute inset-y-0 left-0 w-0.5 bg-lime"
-        initial={false}
-        animate={{ scaleY: done && !sealed ? 1 : 0 }}
-        style={{ originY: 0 }}
-        transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      />
-
-      {/* --- the channel line ----------------------------------------- */}
       <button
         type="button"
         disabled={sealed}
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors disabled:cursor-not-allowed enabled:hover:bg-raised/60"
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors disabled:cursor-not-allowed enabled:hover:bg-raised/60"
       >
+        {/* One mark carrying the whole state: numbered, ticked, or locked.
+            It replaces a number, a codename, a signal meter and a status
+            word that between them said the same thing four times. */}
         <span
-          className={`font-mono text-[10px] tabular-nums ${
-            sealed ? "text-ash/25" : done ? "text-lime" : "text-ash/50"
+          className={`flex h-6 w-6 shrink-0 items-center justify-center border text-[10px] font-bold tabular-nums transition-colors ${
+            done && !sealed
+              ? "border-lime bg-lime text-void"
+              : sealed
+                ? "border-line text-ash"
+                : "border-line text-ash"
           }`}
         >
-          {quest.n}
+          {sealed ? (
+            <FiLock className="h-3 w-3" />
+          ) : done ? (
+            <FiCheck className="h-3.5 w-3.5" />
+          ) : (
+            index + 1
+          )}
         </span>
 
         <span
-          className={`eyebrow flex-1 truncate ${
-            sealed ? "text-ash/30" : done ? "text-lime" : "text-chalk"
+          className={`flex-1 truncate text-sm font-bold ${
+            sealed ? "text-ash" : done ? "text-lime" : "text-chalk"
           }`}
         >
-          {CHANNEL[quest.id as QuestId]}
+          {quest.title}
         </span>
 
-        {/* Four ticks that fill as the channel resolves — the signal-strength
-            read, and the one piece of motion that marks a step landing. */}
-        <span aria-hidden className="flex items-end gap-0.5">
-          {[3, 5, 7, 9].map((h, i) => (
-            <motion.span
-              key={h}
-              className={done && !sealed ? "bg-lime" : "bg-line"}
-              style={{ width: 2, height: h }}
-              initial={false}
-              animate={
-                status === "READING" && !reduced
-                  ? { opacity: [0.25, 1, 0.25] }
-                  : { opacity: done && !sealed ? 1 : 0.35 }
-              }
-              transition={
-                status === "READING"
-                  ? { duration: 0.9, repeat: Infinity, delay: i * 0.12 }
-                  : { duration: 0.3 }
-              }
-            />
-          ))}
-        </span>
-
-        <span
-          className={`eyebrow w-[4.5rem] text-right ${
-            sealed
-              ? "text-ash/30"
-              : done
-                ? "text-lime"
-                : status === "READING"
-                  ? "text-chalk"
-                  : "text-ash/60"
-          }`}
-        >
-          {status}
-        </span>
+        {check.state === "checking" && quest.needsLink && (
+          <FiLoader className="h-3.5 w-3.5 shrink-0 animate-spin text-ash" />
+        )}
       </button>
 
       {/* --- the instruction ------------------------------------------- */}
@@ -347,12 +293,9 @@ function Channel({
                   />
                 </div>
 
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-bold text-chalk">{quest.title}</p>
-                  <p className="mt-1 text-xs leading-relaxed whitespace-pre-line text-ash">
-                    {quest.detail}
-                  </p>
-                </div>
+                <p className="min-w-0 flex-1 text-xs leading-relaxed whitespace-pre-line text-ash">
+                  {quest.detail}
+                </p>
               </div>
 
               {quest.phrase && <Phrase text={quest.phrase} />}
@@ -362,7 +305,7 @@ function Channel({
                   href={link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 border border-line px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors hover:border-lime hover:text-lime"
+                  className="pressable inline-flex items-center gap-1 border-2 border-line px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors hover:border-lime hover:text-lime"
                 >
                   {quest.cta}
                   <FiArrowUpRight className="h-3 w-3" />
@@ -373,7 +316,7 @@ function Channel({
                     type="button"
                     onClick={() => onChange({ ...state, [quest.id]: !done })}
                     aria-pressed={done}
-                    className={`border px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase transition-colors ${
+                    className={`pressable border-2 px-3 py-1.5 text-[11px] font-bold tracking-wider uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors ${
                       done
                         ? "border-lime bg-lime text-void"
                         : "border-line text-ash hover:border-lime hover:text-lime"
@@ -400,8 +343,8 @@ function Channel({
       </AnimatePresence>
 
       {sealed && (
-        <p className="px-4 pb-3 pl-[2.1rem] text-[11px] text-ash/50">
-          Opens once {CHANNEL[QUESTS[GATE_INDEX].id as QuestId]} reads clear.
+        <p className="px-4 pb-3 pl-[2.1rem] text-[11px] text-ash">
+          Unlocks once step {GATE_INDEX + 1} is verified.
         </p>
       )}
     </li>
@@ -533,11 +476,12 @@ function QuoteField({
 
   return (
     <div className="mt-3">
-      <label htmlFor={questId} className="eyebrow text-ash/60">
+      <label htmlFor={questId} className="eyebrow text-lime-dim">
         Paste your post
       </label>
 
-      <div className="mt-1.5 flex items-center gap-2 border bg-void px-3 transition-colors focus-within:border-lime"
+      <div
+        className="mt-1.5 flex items-center gap-2 border bg-void px-3 transition-colors focus-within:border-lime"
         style={{
           borderColor:
             check.state === "ok"
@@ -558,7 +502,7 @@ function QuoteField({
           onChange={(e) => onChange(e.target.value)}
           placeholder="https://x.com/you/status/…"
           aria-invalid={Boolean(error)}
-          className="w-full bg-transparent py-2.5 font-mono text-xs text-chalk outline-none placeholder:text-ash/25"
+          className="w-full bg-transparent py-2.5 font-mono text-xs text-chalk outline-none placeholder:text-ash"
         />
         {check.state === "checking" && (
           <FiLoader className="h-3.5 w-3.5 shrink-0 animate-spin text-ash" />

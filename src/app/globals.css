@@ -77,10 +77,44 @@ body {
 
 /* --- surfaces -------------------------------------------------------- */
 
-/** A panel edge that reads as machined rather than drawn. */
+/**
+ * The panel.
+ *
+ * A 2px edge with a hard offset shadow rather than a hairline and a blur.
+ * The artwork is pixel art drawn with chunky outlines and no soft edges, and
+ * a 1px border with a gaussian drop shadow is the one thing that makes flat
+ * UI look like it was pasted on top of it. The offset is solid and
+ * unblurred for the same reason: nothing in a sprite has a soft shadow.
+ */
 .panel {
+  /* Translucent rather than solid: the shaft's colour now changes behind
+     these, and an opaque slab would read as a hole punched through it. */
+  background: color-mix(in srgb, var(--color-panel) 82%, transparent);
+  backdrop-filter: blur(10px);
+  border: 2px solid var(--color-line);
+  box-shadow: 4px 4px 0 0 rgba(0, 0, 0, 0.45);
+}
+
+/** The same edge, for controls small enough that 4px would swamp them. */
+.panel-sm {
   background: var(--color-panel);
-  border: 1px solid var(--color-line);
+  border: 2px solid var(--color-line);
+  box-shadow: 2px 2px 0 0 rgba(0, 0, 0, 0.55);
+}
+
+/**
+ * A panel lit by its sector.
+ *
+ * Every room already carries a colour read off its own artwork, and until
+ * now that drove one small label. Letting it set the panel's edge is what
+ * makes six rooms feel like six places rather than one template repeated.
+ * Set `--tint` on the element.
+ */
+.panel-tint {
+  border-color: color-mix(in srgb, var(--tint) 55%, var(--color-line));
+  box-shadow:
+    4px 4px 0 0 rgba(0, 0, 0, 0.55),
+    inset 0 0 0 1px color-mix(in srgb, var(--tint) 18%, transparent);
 }
 
 /**
@@ -141,8 +175,8 @@ body {
     to bottom,
     rgba(0, 0, 0, 0) 0px,
     rgba(0, 0, 0, 0) 2px,
-    rgba(0, 0, 0, 0.14) 3px,
-    rgba(0, 0, 0, 0.14) 4px
+    rgba(0, 0, 0, 0.08) 3px,
+    rgba(0, 0, 0, 0.08) 4px
   );
 }
 
@@ -169,6 +203,24 @@ body {
 }
 
 /* --- motion ---------------------------------------------------------- */
+
+/**
+ * The press.
+ *
+ * A button with a hard offset shadow should travel into it when pushed,
+ * rather than dimming — that is the whole reason for drawing the shadow
+ * solid. Applied to anything with `.panel-sm` that is also interactive.
+ */
+.pressable {
+  transition:
+    transform 0.08s ease-out,
+    box-shadow 0.08s ease-out;
+}
+
+.pressable:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 0 rgba(0, 0, 0, 0.55);
+}
 
 @keyframes blink {
   0%,
