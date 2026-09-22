@@ -14,12 +14,22 @@ export type Sector = {
   /**
    * The room, cut out of its background so it can float in the map.
    *
-   * Generated from the source artwork by `scripts/cut-tiles.py`. The original
-   * animated diorama lives in `assets-source/` and is deliberately not
-   * shipped — six 1920px GIFs is 69MB, and the map shows the rooms as still
-   * objects in 3D space rather than playing them.
+   * An animated sprite sheet, generated from the source artwork by
+   * `scripts/cut-tiles.py`. The original diorama GIFs live in
+   * `assets-source/` and are deliberately not shipped: six 1920px GIFs is
+   * 69MB against about 2MB a sheet.
    */
   tile: string;
+
+  /**
+   * One frame of the same room, for phones.
+   *
+   * The sheets decode to roughly 10MB of VRAM each, and six of those is more
+   * than a mid-range phone will give a browser tab without thrashing. The
+   * still is 192px, which is 0.15MB decoded and still above what a phone
+   * screen resolves at the size a tile is drawn.
+   */
+  still: string;
   /** Dominant colour of the artwork — drives the card's rim light. */
   tint: string;
   /** One line, in the briefing voice. */
@@ -69,6 +79,7 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 01",
     name: "The Holding Bay",
     tile: "/sectors/01-tile.png",
+    still: "/sectors/01-still.png",
     tint: "#8f9aa3",
     blurb:
       "Concrete, chain-link and crates nobody will open. Everyone starts here.",
@@ -83,6 +94,7 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 02",
     name: "The Lava Vault",
     tile: "/sectors/02-tile.png",
+    still: "/sectors/02-still.png",
     tint: "#ff6a2b",
     blurb:
       "Something green is sealed in the glass and the floor has cracked around it.",
@@ -97,6 +109,7 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 03",
     name: "The Greenhouse",
     tile: "/sectors/03-tile.png",
+    still: "/sectors/03-still.png",
     tint: "#7bc86c",
     blurb: "One working cabinet, still lit, halfway buried in vines.",
     intel: [
@@ -110,6 +123,7 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 04",
     name: "Cold Storage",
     tile: "/sectors/04-tile.png",
+    still: "/sectors/04-still.png",
     tint: "#7fd4e8",
     blurb: "The rigs never stopped running. The bears moved in anyway.",
     intel: [
@@ -123,6 +137,7 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 05",
     name: "The Red Canyon",
     tile: "/sectors/05-tile.png",
+    still: "/sectors/05-still.png",
     tint: "#c65f5f",
     blurb: "Open ground, high rocks, and one lamp that somebody keeps lit.",
     intel: [
@@ -136,6 +151,7 @@ export const SECTORS: Sector[] = [
     code: "SECTOR 06",
     name: "The Dig",
     tile: "/sectors/06-tile.png",
+    still: "/sectors/06-still.png",
     tint: "#f5c344",
     blurb: "They found the pyramid first and the door underneath it second.",
     intel: [

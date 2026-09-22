@@ -25,6 +25,7 @@ a texture does not reliably do.
 Usage:  python3 scripts/cut-tiles.py
 Writes: public/sectors/<n>-tile.png   (a COLS x ROWS sheet)
         public/sectors/<n>-tile.json  (its frame count and grid)
+        public/sectors/<n>-still.png  (one frame, for phones)
 """
 
 import json
@@ -55,6 +56,14 @@ FRAME_SIZE = 256
 # The sheet's grid. 8x5 holds 40 frames in a 2048x1280 texture, inside the
 # 4096 limit every WebGL2 device supports.
 COLS = 8
+
+# The single frame phones get instead of the sheet.
+#
+# A sheet decodes to about 10MB of VRAM and six of them is more than a
+# mid-range phone gives a browser tab without thrashing. At 192px a still is
+# 0.15MB decoded, and still above what a phone screen resolves at the size a
+# tile is actually drawn.
+STILL_SIZE = 192
 
 
 def close_enough(a, b, tol=TOLERANCE):
@@ -173,6 +182,13 @@ def build(path: Path, out_png: Path, out_json: Path) -> tuple[int, float]:
         sheet.paste(frame, (x, y))
 
     sheet.save(out_png, "PNG", optimize=True)
+
+    # The phone build: frame 0 on its own.
+    frames[0].resize((STILL_SIZE, STILL_SIZE), Image.LANCZOS).save(
+        out_png.with_name(out_png.name.replace("-tile.png", "-still.png")),
+        "PNG",
+        optimize=True,
+    )
     out_json.write_text(
         json.dumps(
             {

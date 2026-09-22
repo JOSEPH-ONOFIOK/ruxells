@@ -17,12 +17,23 @@ import type { Points } from "three";
 const COUNT = 420;
 const SPREAD = 46;
 
-export function Clouds({ dimmed }: { dimmed: boolean }) {
+export function Clouds({
+  dimmed,
+  lite = false,
+}: {
+  dimmed: boolean;
+  /** Fewer, and no additive blending, on a phone. */
+  lite?: boolean;
+}) {
+  // Additive blending on hundreds of overlapping sprites is a fill-rate
+  // cost a phone pays on every frame, so lite draws a third as many and
+  // composites them normally.
+  const count = lite ? Math.round(COUNT / 3) : COUNT;
   const points = useRef<Points>(null);
 
   const { positions, sizes } = useMemo(() => {
-    const positions = new Float32Array(COUNT * 3);
-    const sizes = new Float32Array(COUNT);
+    const positions = new Float32Array(count * 3);
+    const sizes = new Float32Array(count);
 
     // A seeded generator rather than Math.random(): the field is derived
     // state, so it has to come out identical on every evaluation. With
@@ -36,7 +47,7 @@ export function Clouds({ dimmed }: { dimmed: boolean }) {
       return ((seed >>> 0) % 100000) / 100000;
     };
 
-    for (let i = 0; i < COUNT; i++) {
+    for (let i = 0; i < count; i++) {
       // Biased toward the edges and the back, so the middle of the field —
       // where the tiles live — stays readable.
       const r = SPREAD * (0.35 + rand() * 0.65);
@@ -50,7 +61,7 @@ export function Clouds({ dimmed }: { dimmed: boolean }) {
     }
 
     return { positions, sizes };
-  }, []);
+  }, [count]);
 
   const texture = useMemo(() => {
     // A soft round dot, drawn once into a canvas. Cheaper than shipping an
@@ -108,7 +119,7 @@ export function Clouds({ dimmed }: { dimmed: boolean }) {
         transparent
         opacity={0.32}
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={lite ? THREE.NormalBlending : THREE.AdditiveBlending}
         toneMapped={false}
       />
     </points>

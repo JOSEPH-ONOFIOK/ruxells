@@ -49,6 +49,27 @@ That is 69MB of GIF down to about 300KB per room. The originals live in
 The tiles are stepped with UV offsets rather than played as video: one texture
 upload, no decoder, no autoplay permission, and it loops seamlessly.
 
+### Quality
+
+Phones get a different build of the scene, chosen once per mount in
+[use-quality.ts](src/components/world/use-quality.ts) from pointer type and
+core count rather than screen width — a narrow desktop window has a real GPU
+behind it, a large tablet may not.
+
+| | full | lite |
+| --- | --- | --- |
+| Tiles | 40-frame sheet | one 192px still |
+| Texture VRAM | ~60MB | ~0.8MB |
+| Download | 14MB | 344KB |
+| Pixel ratio | up to 2 | 1 |
+| Antialiasing | on | off |
+| Clouds | 420, additive | 140, normal |
+| Frame rate | 60 | 30 |
+
+The VRAM figure is what actually matters: six 2048x1280 sheets decode to more
+than a mid-range phone hands a browser tab, and the symptom is a permanently
+janky camera rather than a slow load. Reduced-motion also selects lite.
+
 ## The allowlist
 
 `/clearance` is the door. The flow is: connect X → clear four channels →

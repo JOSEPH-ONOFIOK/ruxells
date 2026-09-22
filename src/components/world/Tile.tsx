@@ -5,6 +5,7 @@ import { useFrame, useLoader } from "@react-three/fiber";
 import { TextureLoader, type Group, type Mesh } from "three";
 import * as THREE from "three";
 import type { Sector } from "@/lib/sectors";
+import { useQuality } from "./use-quality";
 
 /**
  * One sector, as an object in the world.
@@ -54,7 +55,13 @@ export function Tile({
   const [hovered, setHovered] = useState(false);
   const [meta, setMeta] = useState<SheetMeta | null>(null);
 
-  const shared = useLoader(TextureLoader, sector.tile);
+  const quality = useQuality();
+  const lite = quality === "lite";
+
+  // On a phone this is one 192px frame instead of a 2048x1280 sheet: 0.15MB
+  // of VRAM against 10MB, which is the difference between a camera that
+  // moves and one that stutters.
+  const shared = useLoader(TextureLoader, lite ? sector.still : sector.tile);
 
   /**
    * Our own copy of the texture.
@@ -85,6 +92,8 @@ export function Tile({
   // The sheet's grid comes from a sidecar written by the same script, so the
   // frame count is never hard-coded against an image that may be rebuilt.
   useEffect(() => {
+    if (lite) return;
+
     let cancelled = false;
     fetch(sector.tile.replace(/\.png$/, ".json"))
       .then((r) => r.json())
@@ -97,7 +106,7 @@ export function Tile({
     return () => {
       cancelled = true;
     };
-  }, [sector.tile]);
+  }, [sector.tile, lite]);
 
   // Show one cell of the sheet at a time. Setting repeat shrinks the sampled
   // window to a single frame; offset then walks it across the grid.

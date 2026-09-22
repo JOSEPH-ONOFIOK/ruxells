@@ -8,7 +8,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -20,6 +20,7 @@ import { Boot } from "../Boot";
 import { Clouds } from "./Clouds";
 import { Rig } from "./Rig";
 import { Tile } from "./Tile";
+import { useQuality } from "./use-quality";
 import { useSceneLoading } from "./use-scene-loading";
 
 /**
@@ -50,6 +51,33 @@ const LAYOUT: [number, number, number][] = [
   [-3.6, 1.9, -5.4],
 ];
 
+/**
+ * Halves the frame rate.
+ *
+ * The camera drifts and the tiles bob, so there is always something to draw
+ * and r3f's demand mode is not an option. Capping the loop instead is barely
+ * visible at the speed this scene moves, and it is the difference between a
+ * warm phone and a hot one the OS then throttles anyway.
+ *
+ * `renderPriority` 1 takes over the render loop, so this runs once for the
+ * whole scene rather than per component.
+ */
+function Throttle() {
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const camera = useThree((s) => s.camera);
+  const last = useRef(0);
+
+  useFrame(({ clock }) => {
+    const t = clock.elapsedTime;
+    if (t - last.current < 1 / 30) return;
+    last.current = t;
+    gl.render(scene, camera);
+  }, 1);
+
+  return null;
+}
+
 /** Reports that everything suspending inside the boundary has resolved. */
 function Ready({ onReady }: { onReady: () => void }) {
   useEffect(onReady, [onReady]);
@@ -63,6 +91,8 @@ export function World({ cleared }: { cleared: number | null }) {
   const { left, closed } = useCountdown(DROP.closesAt);
 
   // One texture per tile, so that is what "loaded" counts up to.
+  const quality = useQuality();
+  const lite = quality === "lite";
   const { loaded, total } = useSceneLoading(SECTORS.length);
   const [sceneReady, setSceneReady] = useState(false);
   // Stable, so mounting Ready does not re-run its effect on every render.
@@ -103,10 +133,14 @@ export function World({ cleared }: { cleared: number | null }) {
       <Canvas
         className={hovering ? "cursor-pointer" : "cursor-grab"}
         // The tiles are pixel art; anything above 2 spends fill rate on
-        // detail the source doesn't have.
-        dpr={[1, 2]}
+        // detail the source doesn't have, and on a phone even 2 is more
+        // pixels than the artwork can fill.
+        dpr={lite ? 1 : [1, 2]}
         camera={{ fov: 42, position: [0, 2.2, 15.5], near: 0.1, far: 120 }}
-        gl={{ antialias: true, alpha: true }}
+        // Nothing in the scene has a diagonal edge that antialiasing would
+        // help: every tile is a quad with a hard alpha cutout. On a phone it
+        // is pure cost.
+        gl={{ antialias: !lite, alpha: true, powerPreference: "high-performance" }}
         onPointerMissed={() => setFocus(null)}
       >
         <Suspense fallback={null}>
@@ -116,8 +150,9 @@ export function World({ cleared }: { cleared: number | null }) {
               readiness: on a warm cache it may finish before the subscribing
               effect runs, and no progress event would ever arrive. */}
           <Ready onReady={markReady} />
+          {lite && <Throttle />}
 
-          <Clouds dimmed={focus !== null} />
+          <Clouds dimmed={focus !== null} lite={lite} />
 
           {SECTORS.map((sector, i) => (
             <Tile
