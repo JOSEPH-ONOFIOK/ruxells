@@ -99,18 +99,8 @@ export const SECTORS: Sector[] = [
       "Concrete, chain-link and crates nobody will open. Everyone starts here.",
   },
   {
-    id: "lab",
-    code: "SECTOR 02",
-    name: "The Cold Lab",
-    tile: "/sectors/02-tile.png",
-    tileSm: "/sectors/02-tile-sm.png",
-    still: "/sectors/02-still.png",
-    tint: "#3a2a6e",
-    blurb: "Whatever they built in here is still humming, and still cold.",
-  },
-  {
     id: "pitch",
-    code: "SECTOR 03",
+    code: "SECTOR 02",
     name: "The Pitch",
     tile: "/sectors/03-tile.png",
     tileSm: "/sectors/03-tile-sm.png",
@@ -120,7 +110,7 @@ export const SECTORS: Sector[] = [
   },
   {
     id: "rig",
-    code: "SECTOR 04",
+    code: "SECTOR 03",
     name: "The Deep Freeze",
     tile: "/sectors/04-tile.png",
     tileSm: "/sectors/04-tile-sm.png",
@@ -130,7 +120,7 @@ export const SECTORS: Sector[] = [
   },
   {
     id: "tomb",
-    code: "SECTOR 05",
+    code: "SECTOR 04",
     name: "The Dig",
     tile: "/sectors/06-tile.png",
     tileSm: "/sectors/06-tile-sm.png",
