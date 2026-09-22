@@ -289,17 +289,20 @@ function Receipt({
       {/* The soldier, at the top of the card. This is the thing people
           screenshot and post, so the collection has to be in the picture —
           a code on a blank panel says nothing about what was joined. */}
-      <div className="relative h-32 overflow-hidden border-b border-line bg-raised sm:h-40">
+      {/* The soldier animates: over 143 frames he raises the rifle. Cropped
+          to a band and held at 60% he was a texture; shown whole he is the
+          one moment on the site where a character does something. */}
+      <div className="relative aspect-square max-h-72 overflow-hidden border-b-2 border-line bg-raised">
         <Image
           src="/brand/soldier.gif"
           alt=""
           aria-hidden
           width={1453}
           height={1455}
-          className="pixelated h-full w-full object-cover object-top opacity-60"
+          className="pixelated h-full w-full object-cover"
           unoptimized
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-panel via-panel/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-panel via-panel/35 to-transparent" />
 
         <motion.div
           className="absolute bottom-3 left-1/2 flex h-10 w-10 -translate-x-1/2 items-center justify-center border border-lime bg-lime"
