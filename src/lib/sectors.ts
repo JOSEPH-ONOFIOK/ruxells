@@ -37,8 +37,6 @@ export type Sector = {
   tint: string;
   /** One line, in the briefing voice. */
   blurb: string;
-  /** Rendered as a two-column readout under the blurb. */
-  intel: [string, string][];
 };
 
 /**
@@ -85,8 +83,8 @@ export const CHAIN = {
 
 /**
  * Each entry describes the room that is actually in its artwork — the names
- * and intel are read off the tiles, not invented, so a sector's panel and the
- * thing floating next to it agree.
+ * and colours are read off the tiles rather than invented, so a sector's
+ * panel and the thing floating next to it agree.
  */
 export const SECTORS: Sector[] = [
   {
@@ -99,11 +97,6 @@ export const SECTORS: Sector[] = [
     tint: "#6f9ce0",
     blurb:
       "Concrete, chain-link and crates nobody will open. Everyone starts here.",
-    intel: [
-      ["Status", "Open"],
-      ["Light", "Failing"],
-      ["Occupants", "Nine"],
-    ],
   },
   {
     id: "lab",
@@ -114,11 +107,6 @@ export const SECTORS: Sector[] = [
     still: "/sectors/02-still.png",
     tint: "#3a2a6e",
     blurb: "Whatever they built in here is still humming, and still cold.",
-    intel: [
-      ["Status", "Running"],
-      ["Temp", "Below"],
-      ["Occupants", "Seven"],
-    ],
   },
   {
     id: "pitch",
@@ -129,11 +117,6 @@ export const SECTORS: Sector[] = [
     still: "/sectors/03-still.png",
     tint: "#429ba3",
     blurb: "Someone marked out a field down here. Both sides turned up.",
-    intel: [
-      ["Status", "In play"],
-      ["Score", "Nil all"],
-      ["Occupants", "Fourteen"],
-    ],
   },
   {
     id: "rig",
@@ -144,11 +127,6 @@ export const SECTORS: Sector[] = [
     still: "/sectors/04-still.png",
     tint: "#429ba3",
     blurb: "The rigs never stopped running. The bears moved in anyway.",
-    intel: [
-      ["Status", "Running"],
-      ["Temp", "Below"],
-      ["Occupants", "Twelve"],
-    ],
   },
   {
     id: "tomb",
@@ -159,11 +137,6 @@ export const SECTORS: Sector[] = [
     still: "/sectors/06-still.png",
     tint: "#a93cfa",
     blurb: "They found the pyramid first and the door underneath it second.",
-    intel: [
-      ["Status", "Restricted"],
-      ["Depth", "Unlogged"],
-      ["Occupants", "Seven"],
-    ],
   },
   {
     id: "canyon",
@@ -174,10 +147,5 @@ export const SECTORS: Sector[] = [
     still: "/sectors/05-still.png",
     tint: "#2cfe53",
     blurb: "Open ground, high rocks, and one lamp that somebody keeps lit.",
-    intel: [
-      ["Status", "Exposed"],
-      ["Cover", "Thin"],
-      ["Occupants", "Ten"],
-    ],
   },
 ];

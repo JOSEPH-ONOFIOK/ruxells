@@ -9,11 +9,13 @@ import { PIECES, type Piece } from "@/lib/gallery";
 /**
  * The collection, as a grid you can open.
  *
- * Deliberately a plain grid: the home page is already a scroll-driven 3D
- * descent, and a second clever layout would be a second thing to work out
- * rather than somewhere to look at the artwork. The only flourish is the
- * lightbox, which earns its place because these are 1600px frames shown at
- * a couple of hundred pixels in the grid.
+ * A mosaic: every fifth piece takes a double cell, so the eye has somewhere
+ * to land rather than scanning a wall of identical squares. The rhythm comes
+ * from the index rather than a random draw, so the layout is the same on
+ * every visit and matches what the server rendered.
+ *
+ * Labels ride over the artwork on hover and sit permanently on touch, where
+ * there is no hover to reveal them.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -90,18 +92,27 @@ export function GalleryGrid() {
         ))}
       </div>
 
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {/* A mosaic rather than a uniform grid: every fifth tile takes two
+          columns, so the eye has somewhere to land instead of scanning a
+          wall of identical squares. The rhythm is by index rather than
+          random, so it is the same on every visit and on the server. */}
+      <motion.ul
+        layout
+        className="grid auto-rows-auto grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6"
+      >
         {shown.map((piece, i) => (
           <motion.li
             key={piece.id}
             layout
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
+            className={i % 5 === 0 ? "col-span-2 row-span-2" : "col-span-1"}
+            initial={{ opacity: 0, scale: 0.92, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{
-              duration: 0.35,
-              delay: Math.min(i, 8) * 0.03,
+              duration: 0.4,
+              delay: Math.min(i, 10) * 0.035,
               ease: EASE,
             }}
+            whileHover={{ y: -4 }}
           >
             <button
               type="button"
@@ -119,20 +130,25 @@ export function GalleryGrid() {
                   alt={piece.label}
                   width={piece.width}
                   height={piece.height}
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  className="pixelated h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 17vw"
+                  className="pixelated h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
                   loading={i < 8 ? "eager" : "lazy"}
                 />
-              </div>
 
-              <div className="flex items-center justify-between gap-2 border-t-2 border-line px-2.5 py-2">
-                <span className="truncate text-[11px] font-bold text-chalk">
-                  {piece.label}
-                </span>
+                {/* The label rides over the artwork on hover instead of
+                    taking a permanent bar under it: twenty-four captions
+                    stacked under twenty-four images is most of what made
+                    the grid feel like a table. */}
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-void via-void/85 to-transparent px-2.5 pt-6 pb-2 transition-transform duration-300 [@media(hover:hover)]:translate-y-full [@media(hover:hover)]:group-hover:translate-y-0 [@media(hover:hover)]:group-focus-visible:translate-y-0">
+                  <span className="block truncate text-[11px] font-bold text-chalk">
+                    {piece.label}
+                  </span>
+                </div>
+
                 {piece.featured && (
                   <span
                     aria-hidden
-                    className="h-1.5 w-1.5 shrink-0"
+                    className="absolute top-2 right-2 h-2 w-2"
                     style={{ background: piece.tint }}
                   />
                 )}
@@ -140,7 +156,7 @@ export function GalleryGrid() {
             </button>
           </motion.li>
         ))}
-      </ul>
+      </motion.ul>
 
       <Lightbox
         piece={open === null ? null : shown[open]}
@@ -180,7 +196,7 @@ function Lightbox({
           <motion.div
             // Clicking the artwork should not close what you opened to see.
             onClick={(e) => e.stopPropagation()}
-            className="panel relative w-full max-w-lg overflow-hidden"
+            className="panel relative flex max-h-[88svh] w-full max-w-lg flex-col overflow-hidden"
             style={
               piece.tint
                 ? ({ borderColor: piece.tint } as React.CSSProperties)
@@ -191,15 +207,20 @@ function Lightbox({
             exit={{ scale: 0.94, y: 12 }}
             transition={{ duration: 0.28, ease: EASE }}
           >
-            <Image
-              src={piece.src}
-              alt={piece.label}
-              width={piece.width}
-              height={piece.height}
-              sizes="(max-width: 640px) 92vw, 32rem"
-              className="pixelated h-auto w-full"
-              priority
-            />
+            {/* min-h-0 lets this shrink inside the flex column; without it
+                the image keeps its intrinsic height and pushes the caption
+                and the arrows off a landscape phone. */}
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <Image
+                src={piece.src}
+                alt={piece.label}
+                width={piece.width}
+                height={piece.height}
+                sizes="(max-width: 640px) 92vw, 32rem"
+                className="pixelated h-full w-full object-contain"
+                priority
+              />
+            </div>
 
             <div className="flex items-center justify-between gap-3 border-t-2 border-line px-4 py-3">
               <div className="min-w-0">
@@ -226,7 +247,7 @@ function Lightbox({
             type="button"
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-4 right-4 border-2 border-line bg-panel p-2 text-ash transition-colors hover:border-lime hover:text-lime sm:top-6 sm:right-6"
+            className="absolute top-4 right-4 flex h-11 w-11 items-center justify-center border-2 border-line bg-panel text-ash transition-colors hover:border-lime hover:text-lime sm:top-6 sm:right-6"
           >
             <FiX className="h-4 w-4" />
           </button>
@@ -250,7 +271,7 @@ function Arrow({
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="pressable border-2 border-line p-2 text-ash shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors hover:border-lime hover:text-lime"
+      className="pressable flex h-11 w-11 items-center justify-center border-2 border-line text-ash shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors hover:border-lime hover:text-lime"
     >
       {children}
     </button>

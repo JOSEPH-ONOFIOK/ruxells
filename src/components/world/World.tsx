@@ -152,7 +152,7 @@ export function World({ cleared }: { cleared: number | null }) {
 
       {/* --- the page ------------------------------------------------- */}
       <div className="relative z-10">
-        <section className="flex min-h-[100svh] flex-col justify-end px-5 pb-16 sm:px-8">
+        <section className="flex min-h-[100svh] flex-col justify-end px-5 pt-24 pb-16 sm:px-8">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={booted ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
@@ -195,7 +195,7 @@ export function World({ cleared }: { cleared: number | null }) {
           {SECTORS.map((sector, i) => (
             <section
               key={sector.id}
-              className="flex min-h-[100svh] items-end px-5 pb-16 sm:items-center sm:px-8 sm:pb-0"
+              className="flex min-h-[100svh] items-end px-5 py-24 sm:items-center sm:px-8 sm:py-16"
             >
               <motion.div
                 className="w-full max-w-xs sm:ml-auto"
@@ -204,37 +204,30 @@ export function World({ cleared }: { cleared: number | null }) {
                 viewport={{ once: true, amount: 0.5 }}
                 transition={{ duration: 0.5, ease: EASE }}
               >
-                <div className="panel ticked p-5">
+                {/* Three things, not six. The intel rows were invented
+                    filler — a status and an occupant count nobody wrote a
+                    story for — and they made every card read as a spec
+                    sheet in front of the artwork it was describing. */}
+                <div
+                  className="panel panel-tint p-5"
+                  style={{ "--tint": sector.tint } as React.CSSProperties}
+                >
                   <div className="flex items-baseline justify-between gap-3">
                     <p className="eyebrow" style={{ color: sector.tint }}>
                       {sector.code}
                     </p>
-                    <span className="eyebrow text-ash/40 tabular-nums">
+                    <span className="eyebrow text-ash tabular-nums">
                       {String(i + 1).padStart(2, "0")}/
                       {String(SECTORS.length).padStart(2, "0")}
                     </span>
                   </div>
 
-                  <h2 className="wordmark mt-2 text-2xl text-chalk">
+                  <h2 className="wordmark mt-2.5 text-2xl text-chalk">
                     {sector.name}
                   </h2>
-                  <p className="mt-2.5 text-xs leading-relaxed text-ash">
+                  <p className="mt-3 text-xs leading-relaxed text-ash">
                     {sector.blurb}
                   </p>
-
-                  <dl className="mt-4 space-y-1 border-t border-line pt-3">
-                    {sector.intel.map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="flex justify-between gap-3 text-[11px]"
-                      >
-                        <dt className="tracking-wider text-ash/60 uppercase">
-                          {key}
-                        </dt>
-                        <dd className="font-bold text-chalk">{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
                 </div>
               </motion.div>
             </section>
@@ -244,7 +237,7 @@ export function World({ cleared }: { cleared: number | null }) {
         <Gallery />
 
         {/* The door. */}
-        <section className="flex min-h-[100svh] flex-col items-center justify-center px-5 text-center">
+        <section className="flex min-h-[100svh] flex-col items-center justify-center px-5 py-24 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
