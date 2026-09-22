@@ -1,6 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useMemo, useRef, useState } from "react";
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Canvas } from "@react-three/fiber";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -9,9 +16,11 @@ import { FiArrowRight, FiX } from "react-icons/fi";
 import { SECTORS } from "@/lib/sectors";
 import { DROP, DROP_PITCH } from "@/lib/sectors";
 import { pad, useCountdown } from "../use-countdown";
+import { Boot } from "../Boot";
 import { Clouds } from "./Clouds";
 import { Rig } from "./Rig";
 import { Tile } from "./Tile";
+import { useSceneLoading } from "./use-scene-loading";
 
 /**
  * The map.
@@ -41,11 +50,34 @@ const LAYOUT: [number, number, number][] = [
   [-3.6, 1.9, -5.4],
 ];
 
+/** Reports that everything suspending inside the boundary has resolved. */
+function Ready({ onReady }: { onReady: () => void }) {
+  useEffect(onReady, [onReady]);
+  return null;
+}
+
 export function World({ cleared }: { cleared: number | null }) {
   const [focus, setFocus] = useState<number | null>(null);
   const [hovering, setHovering] = useState(false);
   const pointer = useRef({ x: 0, y: 0 });
   const { left, closed } = useCountdown(DROP.closesAt);
+
+  // One texture per tile, so that is what "loaded" counts up to.
+  const { loaded, total } = useSceneLoading(SECTORS.length);
+  const [sceneReady, setSceneReady] = useState(false);
+  // Stable, so mounting Ready does not re-run its effect on every render.
+  const markReady = useCallback(() => setSceneReady(true), []);
+
+  // A stalled request would otherwise hold the boot screen forever. After
+  // this the world is shown regardless — a half-populated map someone can
+  // use beats a bar that never fills.
+  const [gaveUp, setGaveUp] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setGaveUp(true), 12000);
+    return () => clearTimeout(t);
+  }, []);
+
+  const booted = sceneReady || gaveUp;
 
   const active = focus === null ? null : SECTORS[focus];
 
@@ -78,6 +110,13 @@ export function World({ cleared }: { cleared: number | null }) {
         onPointerMissed={() => setFocus(null)}
       >
         <Suspense fallback={null}>
+          {/* Mounted only once every texture inside this boundary has
+              resolved, which is the signal the boot screen actually waits
+              on. The loading manager drives the bar, but it cannot report
+              readiness: on a warm cache it may finish before the subscribing
+              effect runs, and no progress event would ever arrive. */}
+          <Ready onReady={markReady} />
+
           <Clouds dimmed={focus !== null} />
 
           {SECTORS.map((sector, i) => (
@@ -97,8 +136,15 @@ export function World({ cleared }: { cleared: number | null }) {
         </Suspense>
       </Canvas>
 
+      <Boot loaded={loaded} total={total} done={booted} />
+
       {/* --- chrome --------------------------------------------------- */}
-      <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-4 sm:p-7">
+      <motion.header
+        className="pointer-events-none absolute inset-x-0 top-0 z-20 flex items-start justify-between gap-3 p-4 sm:p-7"
+        initial={{ opacity: 0, y: -8 }}
+        animate={booted ? { opacity: 1, y: 0 } : { opacity: 0, y: -8 }}
+        transition={{ duration: 0.5, delay: 0.15, ease: EASE }}
+      >
         {/* The soldier stands watch over the map — the one figure at a human
             scale next to six rooms seen from above, which is what gives the
             tiles their size. He is the same character whose eyes are the
@@ -140,11 +186,11 @@ export function World({ cleared }: { cleared: number | null }) {
             )}
           </p>
         </div>
-      </header>
+      </motion.header>
 
       {/* --- the pitch, while nothing is focused ---------------------- */}
       <AnimatePresence>
-        {focus === null && (
+        {focus === null && booted && (
           <motion.div
             key="pitch"
             className="pointer-events-none absolute inset-x-0 bottom-0 z-20 p-4 sm:p-7"
