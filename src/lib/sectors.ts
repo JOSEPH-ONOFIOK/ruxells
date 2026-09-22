@@ -138,14 +138,4 @@ export const SECTORS: Sector[] = [
     tint: "#a93cfa",
     blurb: "They found the pyramid first and the door underneath it second.",
   },
-  {
-    id: "canyon",
-    code: "SECTOR 06",
-    name: "The Red Canyon",
-    tile: "/sectors/05-tile.png",
-    tileSm: "/sectors/05-tile-sm.png",
-    still: "/sectors/05-still.png",
-    tint: "#2cfe53",
-    blurb: "Open ground, high rocks, and one lamp that somebody keeps lit.",
-  },
 ];
