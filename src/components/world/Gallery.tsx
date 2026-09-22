@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRef } from "react";
+import { FiArrowRight } from "react-icons/fi";
 import {
   motion,
   useReducedMotion,
@@ -58,6 +60,14 @@ export function Gallery() {
           Rooms that didn&rsquo;t make the descent. Nobody has explained the
           dragon yet.
         </p>
+
+        <Link
+          href="/gallery"
+          className="pressable mt-5 inline-flex items-center gap-2 border-2 border-line px-4 py-2.5 text-[11px] font-bold tracking-wider uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors hover:border-lime hover:text-lime"
+        >
+          See all of them
+          <FiArrowRight className="h-3 w-3" />
+        </Link>
       </div>
 
       <div className="mt-10 space-y-3">
