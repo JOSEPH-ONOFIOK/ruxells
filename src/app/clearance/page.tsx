@@ -5,11 +5,28 @@ import { signupsOpen } from "@/lib/allowlist-status";
 import { currentAccount } from "@/lib/x-session";
 import { SECTORS } from "@/lib/sectors";
 
+const DESCRIPTION =
+  "Four channels and a wallet. The list is the only way to be sure of a spot on the free mint.";
+
 export const metadata = {
-  // The root layout's template turns this into "Clearance — RUXXELLS".
+  // The root layout's template turns this into "Clearance · RUXXELLS".
   title: "Clearance",
-  description:
-    "Four channels and a wallet. The list is the only way to be sure of a spot on the free mint.",
+  description: DESCRIPTION,
+  // The card is restated rather than inherited: a link to the door should
+  // preview as the door, and openGraph on a child route replaces the
+  // layout's block wholesale rather than merging into it.
+  openGraph: {
+    title: "Clearance · RUXXELLS",
+    description: DESCRIPTION,
+    url: "/clearance",
+    images: [{ url: "/og.png", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image" as const,
+    title: "Clearance · RUXXELLS",
+    description: DESCRIPTION,
+    images: ["/og.png"],
+  },
 };
 
 export default async function Clearance({
@@ -82,6 +99,21 @@ export default async function Clearance({
             ← The map
           </Link>
         </nav>
+
+        {/* The crew, as a reminder of what the list is for. Sits above the
+            terminal so the first thing on the page is the collection rather
+            than a form. */}
+        <div className="panel ticked mb-8 overflow-hidden">
+          <Image
+            src="/brand/banner.png"
+            alt="The Ruxxells crew, in the arcade"
+            width={1500}
+            height={500}
+            className="pixelated h-auto w-full"
+            sizes="(max-width: 640px) 100vw, 36rem"
+            priority
+          />
+        </div>
 
         <div className="mb-8">
           <div className="flex items-center gap-2">

@@ -24,13 +24,25 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     locale: "en_US",
+    images: [
+      {
+        url: "/og.png",
+        width: 1200,
+        height: 630,
+        alt: "RUXXELLS, over a room from the collection",
+      },
+    ],
   },
 
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
+    images: ["/og.png"],
   },
+
+  // icon.png and apple-icon.png sit beside this file and Next wires them up
+  // on its own, so listing them here would only risk the two drifting apart.
 
   robots: {
     index: true,
