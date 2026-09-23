@@ -44,19 +44,28 @@ OUT = ROOT / "public" / "sectors"
 # variation, which is what sets the floor here.
 TOLERANCE = 38
 
-# Every Nth frame. The source is 120 frames at 24fps; taking every third
-# gives 40 frames at 8fps, which is the right cadence for pixel art and a
-# third of the pixels to ship.
-FRAME_STEP = 3
+# Every Nth frame. The source is 120 frames at 24fps; taking every sixth
+# gives 20 frames at 4fps.
+#
+# Fewer frames buys resolution, and resolution is what was actually missing:
+# a room is drawn about 800 CSS pixels tall, so a 256px cell was being
+# upscaled three to six times and the pixel art turned to mush. These loops
+# are slow ambient motion — a flickering light, a turning fan — so half the
+# frames is a cost nobody notices, where the blur was the first thing anyone
+# did.
+FRAME_STEP = 6
 
-# Each frame's size in the sheet. The rooms are shown a few hundred pixels
-# wide at most, so 256 is already generous — and 40 of them at 320 would push
-# the sheet past what mobile GPUs reliably accept as one texture.
-FRAME_SIZE = 256
+# Each frame's size in the sheet.
+#
+# A room fills roughly 700-850 CSS pixels on a laptop, which is 1400-1700
+# device pixels on a 2x screen. 512 is the largest cell that keeps the sheet
+# inside the 4096 limit every WebGL2 device supports, and it halves the
+# upscale that was making the artwork blurry.
+FRAME_SIZE = 512
 
-# The sheet's grid. 8x5 holds 40 frames in a 2048x1280 texture, inside the
-# 4096 limit every WebGL2 device supports.
-COLS = 8
+# The sheet's grid. 5 columns holds 20 frames in four rows, a 2560x2048
+# texture — inside the 4096 limit every WebGL2 device supports.
+COLS = 5
 
 # The single frame phones get instead of the sheet.
 #
@@ -64,7 +73,7 @@ COLS = 8
 # mid-range phone gives a browser tab without thrashing. At 192px a still is
 # 0.15MB decoded, and still above what a phone screen resolves at the size a
 # tile is actually drawn.
-STILL_SIZE = 192
+STILL_SIZE = 384
 
 # The phone build: the same frames at a smaller cell.
 #
@@ -72,7 +81,7 @@ STILL_SIZE = 192
 # phone hands a browser tab. At 112 a cell the sheet is 896x560, or 2MB
 # decoded, so phones keep the animation rather than being handed a frozen
 # frame.
-SMALL_SIZE = 112
+SMALL_SIZE = 160
 
 
 def close_enough(a, b, tol=TOLERANCE):
