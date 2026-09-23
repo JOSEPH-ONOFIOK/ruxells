@@ -45,6 +45,35 @@ export function GalleryGrid() {
     [shown.length],
   );
 
+  /**
+   * Warm the neighbours.
+   *
+   * These are 1600px frames, roughly 380KB each, and nothing was fetching
+   * them until the arrow was pressed — so every step paid a full network
+   * round trip before anything moved. Preloading the piece either side means
+   * the common case is a swap between two images already in cache.
+   *
+   * The URL has to be the optimised one next/image will actually request:
+   * warming the raw path would fill the cache with a file the lightbox never
+   * asks for. Which width bucket it picks depends on the viewport and the
+   * device pixel ratio, so both plausible ones are warmed — a second request
+   * for an image already on its way costs nothing, a miss costs the whole
+   * wait this is meant to remove.
+   */
+  useEffect(() => {
+    if (open === null) return;
+
+    for (const by of [1, -1]) {
+      const neighbour = shown[(open + by + shown.length) % shown.length];
+      if (!neighbour) continue;
+
+      for (const w of [640, 1080]) {
+        const img = new window.Image();
+        img.src = `/_next/image?url=${encodeURIComponent(neighbour.src)}&w=${w}&q=75`;
+      }
+    }
+  }, [open, shown]);
+
   // Arrow keys and escape, because a lightbox that only answers to clicks is
   // the kind that traps someone on a laptop.
   useEffect(() => {
@@ -187,7 +216,7 @@ function Lightbox({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.14 }}
           onClick={onClose}
           role="dialog"
           aria-modal="true"
@@ -202,24 +231,36 @@ function Lightbox({
                 ? ({ borderColor: piece.tint } as React.CSSProperties)
                 : undefined
             }
-            initial={{ scale: 0.94, y: 12 }}
+            initial={{ scale: 0.96, y: 8 }}
             animate={{ scale: 1, y: 0 }}
-            exit={{ scale: 0.94, y: 12 }}
-            transition={{ duration: 0.28, ease: EASE }}
+            exit={{ scale: 0.96, y: 8 }}
+            transition={{ duration: 0.18, ease: EASE }}
           >
             {/* min-h-0 lets this shrink inside the flex column; without it
                 the image keeps its intrinsic height and pushes the caption
                 and the arrows off a landscape phone. */}
             <div className="min-h-0 flex-1 overflow-hidden">
-              <Image
-                src={piece.src}
-                alt={piece.label}
-                width={piece.width}
-                height={piece.height}
-                sizes="(max-width: 640px) 92vw, 32rem"
-                className="pixelated h-full w-full object-contain"
-                priority
-              />
+              {/* Keyed on the piece so stepping crossfades rather than
+                  leaving the old frame in place until the new one decodes.
+                  Kept very short: this is feedback for a button press, not
+                  a transition worth watching. */}
+              <motion.div
+                key={piece.id}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.12 }}
+                className="h-full w-full"
+              >
+                <Image
+                  src={piece.src}
+                  alt={piece.label}
+                  width={piece.width}
+                  height={piece.height}
+                  sizes="(max-width: 640px) 92vw, 32rem"
+                  className="pixelated h-full w-full object-contain"
+                  priority
+                />
+              </motion.div>
             </div>
 
             <div className="flex items-center justify-between gap-3 border-t-2 border-line px-4 py-3">
