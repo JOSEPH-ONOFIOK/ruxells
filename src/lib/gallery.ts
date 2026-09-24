@@ -20,8 +20,16 @@ export type Piece = {
   label: string;
   /** Named rooms carry their sector colour; loose frames stay neutral. */
   tint?: string;
-  /** True for the six that appear in the descent. */
+  /** True for the rooms that appear in the sectors section. */
   featured: boolean;
+  /**
+   * The animated version, where one exists.
+   *
+   * Only three of the eighteen loose frames were ever animated — the rest
+   * are stills in the source too — so the gallery mixes moving and still
+   * pieces by necessity rather than choice.
+   */
+  gif?: string;
 };
 
 const ROOMS: Piece[] = SECTORS.map((sector) => ({
@@ -34,7 +42,11 @@ const ROOMS: Piece[] = SECTORS.map((sector) => ({
   label: sector.name,
   tint: sector.tint,
   featured: true,
+  gif: sector.gif,
 }));
+
+/** The loose frames with an animated source, built by `scripts/room-gifs.py`. */
+const LIVE_FRAMES = new Set(["02", "05", "15"]);
 
 const FRAMES: Piece[] = Array.from({ length: 18 }, (_, i) => {
   const n = String(i + 1).padStart(2, "0");
@@ -45,6 +57,7 @@ const FRAMES: Piece[] = Array.from({ length: 18 }, (_, i) => {
     height: 1600,
     label: `Frame ${n}`,
     featured: false,
+    gif: LIVE_FRAMES.has(n) ? `/recon-live/${n}.gif` : undefined,
   };
 });
 

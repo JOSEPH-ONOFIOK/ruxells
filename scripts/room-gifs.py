@@ -38,9 +38,27 @@ ROOMS = {
     "06": "The Dig",
 }
 
+# Gallery frames that have an animated source, as recon number -> source gif.
+#
+# Only three of the eighteen do. The rest exist as stills only, so the
+# gallery mixes moving and still pieces by necessity rather than choice —
+# matched by comparing every frame against every source, not assumed.
+GALLERY = {
+    "02": SOURCE / "05.gif",
+    "05": SOURCE / "06.gif",
+    "15": SOURCE.parent / "Ruxxells NFT" / "5.gif",
+}
+
 # A card is at most ~640 CSS px wide and usually half that. 480 covers a 2x
 # screen at the common size without paying for the 1920px master.
 SIZE = 480
+
+# Colours in the shared palette.
+#
+# The art is flat pixel work and uses far fewer than 255 distinct colours, so
+# halving the palette takes about 16% off every file with no visible
+# difference — checked side by side at 1:1 before it went in.
+COLORS = 128
 
 # Every Nth frame. The source runs 120 frames at 25fps; every third gives 40
 # frames at about 8fps, which is the right cadence for pixel art and a third
@@ -67,7 +85,7 @@ def build(src: Path, gif_out: Path, png_out: Path) -> tuple[int, float]:
     # One shared palette across every frame rather than one per frame. The
     # rooms barely change between frames, so a per-frame palette spends bytes
     # re-describing the same colours and can make flat areas shimmer.
-    palette_source = frames[0].quantize(colors=255, method=Image.MEDIANCUT)
+    palette_source = frames[0].quantize(colors=COLORS, method=Image.MEDIANCUT)
     quantised = [f.quantize(palette=palette_source, dither=Image.NONE) for f in frames]
 
     quantised[0].save(
@@ -97,6 +115,18 @@ def main() -> None:
 
         count, kb = build(src, OUT / f"{key}.gif", OUT / f"{key}.png")
         print(f"{name:18s} {src.name} -> {key}.gif  {count} frames  {kb:6.0f} KB")
+
+    gallery_out = ROOT / "public" / "recon-live"
+    gallery_out.mkdir(parents=True, exist_ok=True)
+
+    for recon, src in GALLERY.items():
+        if not src.exists():
+            print(f"skip recon {recon} — {src.name} not found")
+            continue
+        count, kb = build(
+            src, gallery_out / f"{recon}.gif", gallery_out / f"{recon}.png"
+        )
+        print(f"recon {recon:15s} {src.name} -> {recon}.gif  {count} frames  {kb:6.0f} KB")
 
 
 if __name__ == "__main__":
