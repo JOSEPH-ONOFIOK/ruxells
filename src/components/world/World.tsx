@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
-import { DROP, SECTORS } from "@/lib/sectors";
+import { DROP } from "@/lib/sectors";
 import { Gallery } from "./Gallery";
 import { Hero } from "./Hero";
 import { Utility } from "./Utility";
@@ -12,10 +12,13 @@ import { Utility } from "./Utility";
 /**
  * The page.
  *
- * The banner is the hero and fills the screen; everything under it sits on a
- * CSS field rather than a 3D scene. The scroll-driven WebGL descent that used
- * to be here is gone — it carried three.js, six sprite sheets and a boot
- * screen to show four rooms, and the rooms read perfectly well as cards.
+ * The banner is the hero; everything under it sits on a CSS field rather than
+ * a 3D scene.
+ *
+ * Hero, then what a Ruxxell does, then the collection, then the door. The
+ * rooms no longer get a section of their own: the gallery already shows every
+ * one of them, and a grid of four here was the same artwork twice before
+ * anyone reached what it is for.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -60,61 +63,6 @@ export function World({ cleared }: { cleared: number | null }) {
 
       <main className="relative z-10">
         <Hero cleared={cleared} />
-
-        {/* --- the rooms --------------------------------------------- */}
-        <section className="px-5 py-24 sm:px-8">
-          <div className="mx-auto max-w-5xl">
-            <p className="eyebrow text-lime">The world</p>
-            <h2 className="wordmark mt-2 text-[clamp(1.6rem,6vw,2.6rem)] text-chalk">
-              {SECTORS.length} sectors
-            </h2>
-            <p className="mt-3 max-w-md text-sm leading-relaxed text-ash">
-              Every Ruxxell comes out of one of these rooms.
-            </p>
-
-            <ul className="mt-10 grid gap-3 sm:grid-cols-2">
-              {SECTORS.map((sector, i) => (
-                <motion.li
-                  key={sector.id}
-                  initial={{ opacity: 0, y: 18 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.3 }}
-                  transition={{
-                    duration: 0.45,
-                    delay: Math.min(i, 3) * 0.06,
-                    ease: EASE,
-                  }}
-                  className="panel panel-tint overflow-hidden"
-                  style={{ "--tint": sector.tint } as React.CSSProperties}
-                >
-                  <div className="relative aspect-[4/3] overflow-hidden bg-void">
-                    <Image
-                      src={sector.still}
-                      alt={sector.name}
-                      width={384}
-                      height={384}
-                      sizes="(max-width: 640px) 100vw, 50vw"
-                      className="pixelated h-full w-full object-cover"
-                      loading={i < 2 ? "eager" : "lazy"}
-                    />
-                  </div>
-
-                  <div className="p-5">
-                    <p className="eyebrow" style={{ color: sector.tint }}>
-                      {sector.code}
-                    </p>
-                    <h3 className="wordmark mt-2 text-xl text-chalk">
-                      {sector.name}
-                    </h3>
-                    <p className="mt-2.5 text-xs leading-relaxed text-ash">
-                      {sector.blurb}
-                    </p>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
-        </section>
 
         <Utility />
 
