@@ -7,6 +7,7 @@ import { FiArrowRight } from "react-icons/fi";
 import { DROP } from "@/lib/sectors";
 import { Gallery } from "./Gallery";
 import { Hero } from "./Hero";
+import { Rooms } from "./Rooms";
 import { Utility } from "./Utility";
 
 /**
@@ -15,10 +16,7 @@ import { Utility } from "./Utility";
  * The banner is the hero; everything under it sits on a CSS field rather than
  * a 3D scene.
  *
- * Hero, then what a Ruxxell does, then the collection, then the door. The
- * rooms no longer get a section of their own: the gallery already shows every
- * one of them, and a grid of four here was the same artwork twice before
- * anyone reached what it is for.
+ * Hero, the rooms, what a Ruxxell does, the collection, then the door.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -63,6 +61,8 @@ export function World({ cleared }: { cleared: number | null }) {
 
       <main className="relative z-10">
         <Hero cleared={cleared} />
+
+        <Rooms />
 
         <Utility />
 

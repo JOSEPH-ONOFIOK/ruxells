@@ -11,7 +11,16 @@ export type Sector = {
   /** Designation shown in the terminal readouts. */
   code: string;
   name: string;
-  /** The room, cut out of its background. */
+  /**
+   * The room animating, with the background the artist painted behind it.
+   *
+   * Earlier versions flood-filled that backdrop away so the room could float
+   * in a 3D scene. The scene is gone and the backdrop is part of the picture,
+   * so these are the whole frame — built by `scripts/room-gifs.py`.
+   */
+  gif: string;
+
+  /** Frame one, shown until the animation is wanted. */
   still: string;
   /** Dominant colour of the artwork — drives the card's rim light. */
   tint: string;
@@ -71,24 +80,27 @@ export const SECTORS: Sector[] = [
     id: "holding",
     code: "SECTOR 01",
     name: "The Holding Bay",
-    still: "/sectors/01-still.png",
+    gif: "/rooms/01.gif",
+    still: "/rooms/01.png",
     tint: "#6f9ce0",
     blurb:
       "Concrete, chain-link and crates nobody will open. Everyone starts here.",
   },
   {
-    id: "pitch",
+    id: "greenhouse",
     code: "SECTOR 02",
-    name: "The Pitch",
-    still: "/sectors/03-still.png",
-    tint: "#429ba3",
-    blurb: "Someone marked out a field down here. Both sides turned up.",
+    name: "The Greenhouse",
+    gif: "/rooms/03.gif",
+    still: "/rooms/03.png",
+    tint: "#a33c3c",
+    blurb: "Vines, grow beds and one arcade cabinet, with lava under the floor.",
   },
   {
     id: "rig",
     code: "SECTOR 03",
     name: "The Deep Freeze",
-    still: "/sectors/04-still.png",
+    gif: "/rooms/04.gif",
+    still: "/rooms/04.png",
     tint: "#7fd4e8",
     blurb: "The rigs never stopped running. The bears moved in anyway.",
   },
@@ -96,7 +108,8 @@ export const SECTORS: Sector[] = [
     id: "tomb",
     code: "SECTOR 04",
     name: "The Dig",
-    still: "/sectors/06-still.png",
+    gif: "/rooms/06.gif",
+    still: "/rooms/06.png",
     tint: "#a93cfa",
     blurb: "They found the pyramid first and the door underneath it second.",
   },

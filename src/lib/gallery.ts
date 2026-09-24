@@ -26,11 +26,11 @@ export type Piece = {
 
 const ROOMS: Piece[] = SECTORS.map((sector) => ({
   id: sector.id,
-  // The still rather than the sheet: a grid cell wants one frame, and
-  // pointing at the sprite sheet here would tile forty rooms into one square.
+  // The poster frame rather than the animation: a grid of twenty-two moving
+  // GIFs is several megabytes and a lot of motion at once.
   src: sector.still,
-  width: 192,
-  height: 192,
+  width: 480,
+  height: 480,
   label: sector.name,
   tint: sector.tint,
   featured: true,
