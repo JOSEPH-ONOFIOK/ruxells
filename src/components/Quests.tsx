@@ -343,7 +343,7 @@ function Channel({
       </AnimatePresence>
 
       {sealed && (
-        <p className="px-4 pb-3 pl-[2.1rem] text-[11px] text-ash">
+        <p className="px-4 pb-3 text-[11px] text-ash sm:pl-[2.1rem]">
           Unlocks once step {GATE_INDEX + 1} is verified.
         </p>
       )}

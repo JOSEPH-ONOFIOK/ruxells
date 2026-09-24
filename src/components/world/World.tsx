@@ -8,7 +8,6 @@ import { DROP } from "@/lib/sectors";
 import { Gallery } from "./Gallery";
 import { Hero } from "./Hero";
 import { Rooms } from "./Rooms";
-import { Utility } from "./Utility";
 
 /**
  * The page.
@@ -16,7 +15,7 @@ import { Utility } from "./Utility";
  * The banner is the hero; everything under it sits on a CSS field rather than
  * a 3D scene.
  *
- * Hero, the rooms, what a Ruxxell does, the collection, then the door.
+ * Hero, the rooms, the collection, then the door.
  */
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -64,12 +63,10 @@ export function World({ cleared }: { cleared: number | null }) {
 
         <Rooms />
 
-        <Utility />
-
         <Gallery />
 
         {/* --- the door ---------------------------------------------- */}
-        <section className="px-5 py-24 text-center sm:px-8">
+        <section className="px-5 py-16 text-center sm:px-8 sm:py-24">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}

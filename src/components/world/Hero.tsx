@@ -31,9 +31,15 @@ export function Hero({ cleared }: { cleared: number | null }) {
           filled a 16:9 screen — 2.16x on a desktop, cropping 41% of the
           width away, which is both blurrier and less of the picture.
           Contain fits the width instead: the whole banner, at 1.28x. */}
-      <div className="relative z-10 flex flex-1 items-center px-4 pt-20 sm:px-6">
+      <div className="relative z-10 flex flex-1 items-center px-4 pt-24 pb-4 sm:px-6 sm:pt-20">
         <motion.div
-          className="mx-auto w-full max-w-[1500px]"
+          // On a phone the banner fitted to the width is a 120px strip in
+          // the middle of an 850px screen. Scaling it well past the viewport
+          // and letting the sides run off gives it a third of the screen and
+          // keeps the cabinet and the crew at a size worth looking at: at
+          // 240% the visible window is the middle 42%, which still holds the
+          // whole wordmark.
+          className="mx-auto w-[240%] max-w-none sm:w-full sm:max-w-[1500px]"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.7, ease: EASE }}
@@ -100,7 +106,7 @@ export function Hero({ cleared }: { cleared: number | null }) {
             </Link>
           </div>
 
-          <dl className="mt-8 flex flex-wrap gap-px border-2 border-line bg-line">
+          <dl className="mt-8 grid grid-cols-2 gap-px border-2 border-line bg-line sm:grid-cols-4">
             {[
               ["Chain", CHAIN.name],
               ["Price", DROP.price],
@@ -109,7 +115,7 @@ export function Hero({ cleared }: { cleared: number | null }) {
                 ? ([["In", cleared.toLocaleString()]] as [string, string][])
                 : []),
             ].map(([key, value]) => (
-              <div key={key} className="flex-1 bg-panel px-4 py-3">
+              <div key={key} className="bg-panel px-4 py-3">
                 <dt className="eyebrow text-lime-dim">{key}</dt>
                 <dd className="wordmark mt-1.5 text-sm text-chalk tabular-nums">
                   {value}

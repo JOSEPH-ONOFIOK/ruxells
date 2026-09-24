@@ -49,7 +49,7 @@ export function Gallery() {
   return (
     <section
       ref={section}
-      className="relative flex min-h-[100svh] flex-col justify-center overflow-hidden py-20"
+      className="relative flex flex-col justify-center overflow-hidden py-16 sm:min-h-[100svh] sm:py-20"
     >
       <div className="px-5 sm:px-8">
         <p className="eyebrow text-lime">The rest of it</p>

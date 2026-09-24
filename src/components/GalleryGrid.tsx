@@ -133,7 +133,11 @@ export function GalleryGrid() {
           <motion.li
             key={piece.id}
             layout
-            className={i % 5 === 0 ? "col-span-2 row-span-2" : "col-span-1"}
+            className={
+              i % 5 === 0
+                ? "col-span-1 sm:col-span-2 sm:row-span-2"
+                : "col-span-1"
+            }
             initial={{ opacity: 0, scale: 0.92, y: 16 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{
