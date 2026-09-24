@@ -51,10 +51,10 @@ export default async function Clearance({
         className="pointer-events-none fixed inset-0 z-0 overflow-hidden"
       >
         <Image
-          src={SECTORS[0].tile}
+          src={SECTORS[0].still}
           alt=""
-          width={512}
-          height={512}
+          width={384}
+          height={384}
           className="pixelated absolute -right-[14%] bottom-[6%] w-[62vw] max-w-[36rem] opacity-[0.07]"
           priority
         />

@@ -11,27 +11,7 @@ export type Sector = {
   /** Designation shown in the terminal readouts. */
   code: string;
   name: string;
-  /**
-   * The room, cut out of its background so it can float in the map.
-   *
-   * An animated sprite sheet, generated from the source artwork by
-   * `scripts/cut-tiles.py`. The original diorama GIFs live in
-   * `assets-source/` and are deliberately not shipped: six 1920px GIFs is
-   * 69MB against about 2MB a sheet.
-   */
-  tile: string;
-
-  /**
-   * The same room, at phone size.
-   *
-   * A full sheet decodes to about 10MB of VRAM and six of those is more than
-   * a mid-range phone hands a browser tab. This one is the same forty frames
-   * at 112px a cell — 2MB decoded — so phones keep the animation instead of
-   * being given a frozen frame.
-   */
-  tileSm: string;
-
-  /** A single frame, for reduced-motion and as the poster. */
+  /** The room, cut out of its background. */
   still: string;
   /** Dominant colour of the artwork — drives the card's rim light. */
   tint: string;
@@ -91,8 +71,6 @@ export const SECTORS: Sector[] = [
     id: "holding",
     code: "SECTOR 01",
     name: "The Holding Bay",
-    tile: "/sectors/01-tile.png",
-    tileSm: "/sectors/01-tile-sm.png",
     still: "/sectors/01-still.png",
     tint: "#6f9ce0",
     blurb:
@@ -102,8 +80,6 @@ export const SECTORS: Sector[] = [
     id: "pitch",
     code: "SECTOR 02",
     name: "The Pitch",
-    tile: "/sectors/03-tile.png",
-    tileSm: "/sectors/03-tile-sm.png",
     still: "/sectors/03-still.png",
     tint: "#429ba3",
     blurb: "Someone marked out a field down here. Both sides turned up.",
@@ -112,18 +88,14 @@ export const SECTORS: Sector[] = [
     id: "rig",
     code: "SECTOR 03",
     name: "The Deep Freeze",
-    tile: "/sectors/04-tile.png",
-    tileSm: "/sectors/04-tile-sm.png",
     still: "/sectors/04-still.png",
-    tint: "#429ba3",
+    tint: "#7fd4e8",
     blurb: "The rigs never stopped running. The bears moved in anyway.",
   },
   {
     id: "tomb",
     code: "SECTOR 04",
     name: "The Dig",
-    tile: "/sectors/06-tile.png",
-    tileSm: "/sectors/06-tile-sm.png",
     still: "/sectors/06-still.png",
     tint: "#a93cfa",
     blurb: "They found the pyramid first and the door underneath it second.",
