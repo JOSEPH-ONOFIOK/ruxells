@@ -11,6 +11,7 @@ import { pad, useCountdown } from "../use-countdown";
 import { Boot } from "../Boot";
 import { Clouds } from "./Clouds";
 import { Gallery } from "./Gallery";
+import { Utility } from "./Utility";
 import { Shaft } from "./Shaft";
 import { useQuality } from "./use-quality";
 import { useSceneLoading } from "./use-scene-loading";
@@ -233,6 +234,8 @@ export function World({ cleared }: { cleared: number | null }) {
             </section>
           ))}
         </div>
+
+        <Utility />
 
         <Gallery />
 
