@@ -8,6 +8,11 @@
  *
  * The copy stays short and concrete for the same reason. Vague ambition
  * ("a whole ecosystem") ages worse than a plain sentence about one mechanic.
+ *
+ * Three of these rather than five. They read as a chain — earn, dig, hold —
+ * and a row of three fills a grid at every width. Reconstruction and
+ * Leaderboards were the vaguest of the set and are the easiest to add back
+ * once there is a real mechanic to describe.
  */
 
 export type Gate = "mint" | "grid";
@@ -55,21 +60,5 @@ export const UTILITIES: Utility[] = [
     gate: "grid",
     still: "/recon/16.jpeg",
     tint: "#429ba3",
-  },
-  {
-    id: "reconstruction",
-    name: "Reconstruction",
-    blurb: "Spend what you have dug up to rebuild a room into something else.",
-    gate: "grid",
-    still: "/recon/12.jpeg",
-    tint: "#a93cfa",
-  },
-  {
-    id: "leaderboards",
-    name: "Leaderboards",
-    blurb: "Who has dug deepest, mined longest, and brought the most people in.",
-    gate: "mint",
-    still: "/recon/17.jpeg",
-    tint: "#2cfe53",
   },
 ];

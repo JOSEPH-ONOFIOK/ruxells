@@ -33,7 +33,7 @@ export function Utility() {
           is.
         </p>
 
-        <ul className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <ul className="mt-10 grid gap-3 sm:grid-cols-3">
           {UTILITIES.map((item, i) => (
             <motion.li
               key={item.id}
@@ -55,7 +55,7 @@ export function Utility() {
                   aria-hidden
                   width={1600}
                   height={1600}
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  sizes="(max-width: 640px) 100vw, 33vw"
                   // Held back and desaturated: the artwork is a hint at what
                   // the feature is about, not a screenshot of a thing that
                   // runs.
