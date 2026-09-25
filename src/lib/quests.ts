@@ -12,7 +12,7 @@ export const X_ACCOUNT = "ruxxells";
  * picked up different spacing on its way through a client still passes — but
  * the words themselves have to be there.
  */
-export const QUOTE_PHRASE = "The gate is open\n\nRUXXELLS\n\nFree mint";
+export const QUOTE_PHRASE = "The gate is open\n\nRUXXELLS\n\nMinting on Robinhood";
 
 /**
  * The posts a quote may point at — newest first.

@@ -4,7 +4,7 @@ import "./globals.css";
 
 const TITLE = "RUXXELLS · Clearance required";
 const DESCRIPTION =
-  "Six sectors, one door, and a list that closes. Clear four steps to be sure of a spot on the free mint.";
+  "Four sectors, one door, and a list that closes. Clear four steps to be sure of a spot.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: { default: TITLE, template: "%s · RUXXELLS" },
   description: DESCRIPTION,
   applicationName: "RUXXELLS",
-  keywords: ["RUXXELLS", "NFT", "free mint", "PFP", "allowlist", "pixel art"],
+  keywords: ["RUXXELLS", "NFT", "mint", "PFP", "allowlist", "pixel art"],
 
   openGraph: {
     type: "website",

@@ -37,7 +37,7 @@ export type Sector = {
  */
 export const DROP = {
   supply: "TBA",
-  price: "Free",
+  price: "TBA",
   date: "TBA",
 
   /**
@@ -55,7 +55,7 @@ export const DROP = {
 /** The headline the drop is announced with. */
 export const DROP_PITCH = {
   title: "The gate is open",
-  line: "Free mint on Robinhood",
+  line: "Minting on Robinhood",
 } as const;
 
 /**

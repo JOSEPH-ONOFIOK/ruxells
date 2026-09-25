@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { FiArrowRight } from "react-icons/fi";
 import { DROP } from "@/lib/sectors";
+import { Intro } from "../Intro";
 import { Gallery } from "./Gallery";
 import { Hero } from "./Hero";
 import { Rooms } from "./Rooms";
@@ -23,6 +24,8 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export function World({ cleared }: { cleared: number | null }) {
   return (
     <div className="relative">
+      <Intro />
+
       {/* The backdrop for the whole page, behind every section. */}
       <div aria-hidden className="field" />
 
@@ -85,7 +88,7 @@ export function World({ cleared }: { cleared: number | null }) {
               Get on the list
             </h2>
             <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-ash">
-              Four steps, then your wallet. {DROP.price} mint, supply{" "}
+              Four steps, then your wallet. Price {DROP.price}, supply{" "}
               {DROP.supply}.
             </p>
 

@@ -42,7 +42,9 @@ export function Hero({ cleared }: { cleared: number | null }) {
           className="mx-auto w-[240%] max-w-none sm:w-full sm:max-w-[1500px]"
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.7, ease: EASE }}
+          // Delayed past the intro's lift, or the banner finishes its
+          // entrance while the curtain is still over it.
+          transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
         >
           <Image
             src="/brand/banner.png"
@@ -65,7 +67,7 @@ export function Hero({ cleared }: { cleared: number | null }) {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: EASE }}
+          transition={{ duration: 0.6, delay: 0.65, ease: EASE }}
         >
           <p className="eyebrow flex flex-wrap items-center gap-2 text-ash">
             <span className="text-lime">{DROP_PITCH.line}</span>

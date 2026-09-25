@@ -6,7 +6,7 @@ import { currentAccount } from "@/lib/x-session";
 import { SECTORS } from "@/lib/sectors";
 
 const DESCRIPTION =
-  "Four channels and a wallet. The list is the only way to be sure of a spot on the free mint.";
+  "Four channels and a wallet. The list is the only way to be sure of a spot.";
 
 export const metadata = {
   // The root layout's template turns this into "Clearance · RUXXELLS".
