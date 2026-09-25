@@ -1,26 +1,18 @@
-import { World } from "@/components/world/World";
-import { countEntries } from "@/lib/allowlist-store";
+import { Scene } from "@/components/checkpoint/Scene";
+
+// The root layout already sets the title and the card for "/", so this page
+// only narrows the description to what the room actually is.
+export const metadata = {
+  description:
+    "One room, one guard, and a door behind him. Four steps and a wallet is the whole job.",
+};
 
 /**
- * The home page.
+ * The way in.
  *
- * It renders on the server now. The world used to be behind a `ssr: false`
- * dynamic import because WebGL cannot run there; with the 3D scene gone
- * there is nothing to defer, so the artwork and the copy are in the first
- * response rather than arriving after a JS chunk.
- *
- * The cleared count is read here so the page paints with a real figure
- * rather than counting up from a placeholder, and a store that is
- * unreachable degrades to no counter at all, never to a wrong one.
+ * A room you stand in rather than a page you scroll. The scrolling version
+ * of the same story lives at /world, through the door the guard is holding.
  */
-async function clearedCount(): Promise<number | null> {
-  try {
-    return await countEntries();
-  } catch {
-    return null;
-  }
-}
-
-export default async function Home() {
-  return <World cleared={await clearedCount()} />;
+export default function Home() {
+  return <Scene />;
 }

@@ -3,7 +3,13 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useMotionValue,
+  useReducedMotion,
+  useSpring,
+} from "framer-motion";
 import { FiArrowUpRight, FiX } from "react-icons/fi";
 import { HOTSPOTS, type Hotspot } from "@/lib/checkpoint";
 
@@ -28,20 +34,25 @@ export function Scene() {
   const frame = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
 
-  // -1..1 across the frame, for the guard's eyes.
-  const [look, setLook] = useState({ x: 0, y: 0 });
+  // How far the guard leans, in pixels. A motion value rather than state:
+  // the pointer moves constantly, and re-rendering four hotspots and a panel
+  // at pointer rate to shift one figure eight pixels is work for nothing.
+  const lean = useMotionValue(0);
+  const leanSpring = useSpring(lean, {
+    stiffness: 90,
+    damping: 18,
+    mass: 0.4,
+  });
 
   const onMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (reduced) return;
       const box = frame.current?.getBoundingClientRect();
       if (!box) return;
-      setLook({
-        x: ((e.clientX - box.left) / box.width) * 2 - 1,
-        y: ((e.clientY - box.top) / box.height) * 2 - 1,
-      });
+      const x = ((e.clientX - box.left) / box.width) * 2 - 1;
+      lean.set(x * 8);
     },
-    [reduced],
+    [reduced, lean],
   );
 
   useEffect(() => {
@@ -52,6 +63,32 @@ export function Scene() {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [open]);
+
+  /**
+   * Hints, for anyone who has stood in the room a while without touching
+   * anything.
+   *
+   * They arrive one at a time rather than all at once: four labels appearing
+   * together would be the diagram the hover states were written to avoid.
+   * The first is late enough to let someone find things on their own.
+   */
+  const [hint, setHint] = useState(-1);
+  const [touched, setTouched] = useState(false);
+
+  useEffect(() => {
+    if (touched) return;
+
+    const first = setTimeout(() => setHint(0), 6000);
+    const cycle = setInterval(
+      () => setHint((h) => (h + 1) % HOTSPOTS.length),
+      4200,
+    );
+
+    return () => {
+      clearTimeout(first);
+      clearInterval(cycle);
+    };
+  }, [touched]);
 
   return (
     <div
@@ -76,29 +113,45 @@ export function Scene() {
         className="absolute inset-0 bg-[radial-gradient(120%_90%_at_50%_45%,transparent_30%,rgba(5,6,7,0.8)_100%)]"
       />
 
-      {/* --- the guard ------------------------------------------------ */}
+      {/* --- the guard, and the door he is holding -------------------- */}
+      {/* He stands in the only way through, so the whole figure is the
+          link rather than a button parked next to him. */}
       <motion.div
-        className="absolute bottom-[8%] left-1/2 w-[min(46vw,17rem)] -translate-x-1/2"
+        className="group absolute bottom-[8%] left-1/2 w-[min(46vw,17rem)] -translate-x-1/2"
+        // The centring lives on this element as a Tailwind class and the lean
+        // on the child, because Framer writes the whole transform and would
+        // drop the translate if both were here.
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, delay: 0.5, ease: EASE }}
-        style={{
-          // He leans a little toward the cursor. Small: he is standing at a
-          // post, not following anyone around the room.
-          transform: reduced
-            ? undefined
-            : `translateX(calc(-50% + ${look.x * 8}px))`,
-        }}
+        // He leans a little toward the cursor. Small: he is standing at a
+        // post, not following anyone around the room.
       >
-        <Image
-          src="/scene/clerk.gif"
-          alt="A Ruxxell holding the door"
-          width={300}
-          height={520}
-          unoptimized
-          priority
-          className="pixelated h-auto w-full"
-        />
+        <motion.div style={{ x: reduced ? 0 : leanSpring }}>
+          <Link href="/world" aria-label="Through the door, into the world">
+            <Image
+              src="/scene/clerk.gif"
+              alt="A Ruxxell holding the door"
+              width={300}
+              height={520}
+              unoptimized
+              priority
+              className="pixelated h-auto w-full transition-[filter] duration-300 group-hover:brightness-110"
+            />
+
+            {/* The doorway lights from behind on approach: the art already has
+              a dark frame around him, so warming it reads as the door being
+              open rather than a rectangle being highlighted. */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-x-[18%] top-[4%] bottom-[10%] -z-10 bg-lime/0 blur-2xl transition-colors duration-500 group-hover:bg-lime/25"
+            />
+
+            <span className="eyebrow absolute inset-x-0 -bottom-7 text-center text-lime opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+              Through the door
+            </span>
+          </Link>
+        </motion.div>
       </motion.div>
 
       {/* --- the hotspots --------------------------------------------- */}
@@ -106,7 +159,10 @@ export function Scene() {
         <motion.button
           key={spot.id}
           type="button"
-          onClick={() => setOpen(spot)}
+          onClick={() => {
+            setOpen(spot);
+            setTouched(true);
+          }}
           onPointerEnter={() => setHovered(spot.id)}
           onPointerLeave={() => setHovered(null)}
           onFocus={() => setHovered(spot.id)}
@@ -128,19 +184,25 @@ export function Scene() {
               turn it into a diagram of itself. */}
           <span
             aria-hidden
-            className={`absolute inset-0 border-2 transition-all duration-200 ${
+            className={`absolute inset-0 border-2 transition-all duration-300 ${
               hovered === spot.id
                 ? "border-lime bg-lime/10"
-                : "border-transparent"
+                : hint === i
+                  ? "border-lime/45"
+                  : "border-transparent"
             }`}
           />
           <span
             aria-hidden
-            className={`eyebrow absolute -top-6 left-0 whitespace-nowrap text-lime transition-opacity duration-200 ${
-              hovered === spot.id ? "opacity-100" : "opacity-0"
+            className={`eyebrow absolute -top-6 left-0 whitespace-nowrap transition-opacity duration-300 ${
+              hovered === spot.id
+                ? "text-lime opacity-100"
+                : hint === i
+                  ? "text-lime/70 opacity-100"
+                  : "opacity-0"
             }`}
           >
-            {spot.label}
+            {hovered === spot.id ? spot.label : spot.hint}
           </span>
         </motion.button>
       ))}
@@ -201,7 +263,10 @@ function Panel({
           aria-modal="true"
           aria-label={spot.panel.title}
         >
-          <div aria-hidden className="absolute inset-0 bg-void/70 backdrop-blur-sm" />
+          <div
+            aria-hidden
+            className="absolute inset-0 bg-void/70 backdrop-blur-sm"
+          />
 
           <motion.div
             onClick={(e) => e.stopPropagation()}

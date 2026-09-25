@@ -55,10 +55,10 @@ export function World({ cleared }: { cleared: number | null }) {
 
         <div className="flex items-center gap-4">
           <Link
-            href="/checkpoint"
+            href="/"
             className="eyebrow text-ash transition-colors hover:text-lime"
           >
-            Checkpoint
+            ← The bay
           </Link>
           <Link
             href="/gallery"

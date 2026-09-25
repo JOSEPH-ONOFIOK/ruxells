@@ -25,6 +25,12 @@ export type Hotspot = {
   box: { x: number; y: number; w: number; h: number };
   /** What happens when it is opened. */
   panel: Panel;
+
+  /**
+   * A nudge, shown only to someone who has stood still long enough to need
+   * one. Short: it is a pointer at the thing, not a description of it.
+   */
+  hint: string;
 };
 
 export type Panel = {
@@ -47,6 +53,7 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: "guard",
     label: "The one in red",
+    hint: "Ask her what it takes",
     box: { x: 31, y: 37, w: 11, h: 20 },
     panel: {
       title: "She does not talk much",
@@ -57,30 +64,33 @@ export const HOTSPOTS: Hotspot[] = [
   {
     id: "crates",
     label: "The crates",
+    hint: "Nobody has opened these",
     box: { x: 15, y: 36, w: 17, h: 18 },
     panel: {
       title: "Nobody will open them",
-      body: "Stamped, stacked and addressed to a sector that does not take deliveries.\n\nSupply is still being decided. Whatever is in here is not part of it yet.",
+      body: "Stamped, stacked and addressed to a sector that does not take deliveries.\n\nSupply is still being decided. What is already out of the crates is worth a look.",
+      action: { label: "See the collection", href: "/gallery" },
     },
   },
   {
     id: "board",
     label: "The wall",
+    hint: "Somebody wrote on it",
     box: { x: 27, y: 22, w: 17, h: 12 },
     panel: {
       title: "Somebody wrote on it",
       body: "Four sectors, one collection, minting on Robinhood.\n\nPrice and supply are still TBA. The list is the only thing being promised, and it closes.",
-      action: { label: "See the collection", href: "/gallery" },
     },
   },
   {
     id: "fence",
     label: "The fence",
+    hint: "There is more past it",
     box: { x: 58, y: 50, w: 22, h: 22 },
     panel: {
       title: "The rest of the bay",
       body: "Past this is the same room again, and then three more like it.\n\nEvery Ruxxell comes out of one of the four.",
-      action: { label: "Look at the rooms", href: "/#rooms" },
+      action: { label: "The long way round", href: "/world" },
     },
   },
 ];
