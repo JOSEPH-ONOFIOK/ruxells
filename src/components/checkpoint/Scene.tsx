@@ -10,8 +10,9 @@ import {
   useReducedMotion,
   useSpring,
 } from "framer-motion";
-import { FiArrowUpRight, FiX } from "react-icons/fi";
+import { FiArrowUpRight, FiVolume2, FiVolumeX, FiX } from "react-icons/fi";
 import { HOTSPOTS, type Hotspot } from "@/lib/checkpoint";
+import { useSound } from "./use-sound";
 
 /**
  * The checkpoint, as a place.
@@ -33,6 +34,7 @@ export function Scene() {
   const [hovered, setHovered] = useState<string | null>(null);
   const frame = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
+  const sound = useSound();
 
   // How far the guard leans, in pixels. A motion value rather than state:
   // the pointer moves constantly, and re-rendering four hotspots and a panel
@@ -128,7 +130,12 @@ export function Scene() {
         // post, not following anyone around the room.
       >
         <motion.div style={{ x: reduced ? 0 : leanSpring }}>
-          <Link href="/world" aria-label="Through the door, into the world">
+          <Link
+            href="/world"
+            aria-label="Through the door, into the world"
+            onClick={() => sound.play("door")}
+            onPointerEnter={() => sound.play("hover")}
+          >
             <Image
               src="/scene/clerk.gif"
               alt="A Ruxxell holding the door"
@@ -162,8 +169,12 @@ export function Scene() {
           onClick={() => {
             setOpen(spot);
             setTouched(true);
+            sound.play("open");
           }}
-          onPointerEnter={() => setHovered(spot.id)}
+          onPointerEnter={() => {
+            setHovered(spot.id);
+            sound.play("hover");
+          }}
           onPointerLeave={() => setHovered(null)}
           onFocus={() => setHovered(spot.id)}
           onBlur={() => setHovered(null)}
@@ -220,12 +231,36 @@ export function Scene() {
           />
         </Link>
 
-        <Link
-          href="/clearance"
-          className="pressable pointer-events-auto border-2 border-lime bg-lime px-4 py-2.5 text-[11px] font-bold tracking-widest text-void uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
-        >
-          Get cleared
-        </Link>
+        <div className="pointer-events-auto flex items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              sound.toggle();
+              // Plays on the way on, so turning it up demonstrates itself.
+              if (!sound.on) setTimeout(() => sound.play("open"), 60);
+            }}
+            aria-label={sound.on ? "Turn sound off" : "Turn sound on"}
+            aria-pressed={sound.on}
+            className={`flex h-10 w-10 items-center justify-center border-2 transition-colors ${
+              sound.on
+                ? "border-lime text-lime"
+                : "border-line text-ash hover:border-lime hover:text-lime"
+            }`}
+          >
+            {sound.on ? (
+              <FiVolume2 className="h-4 w-4" />
+            ) : (
+              <FiVolumeX className="h-4 w-4" />
+            )}
+          </button>
+
+          <Link
+            href="/clearance"
+            className="pressable border-2 border-lime bg-lime px-4 py-2.5 text-[11px] font-bold tracking-widest text-void uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
+          >
+            Get cleared
+          </Link>
+        </div>
       </header>
 
       <motion.p
@@ -237,7 +272,13 @@ export function Scene() {
         Something in here opens
       </motion.p>
 
-      <Panel spot={open} onClose={() => setOpen(null)} />
+      <Panel
+        spot={open}
+        onClose={() => {
+          setOpen(null);
+          sound.play("close");
+        }}
+      />
     </div>
   );
 }
