@@ -43,13 +43,18 @@ export const DROP = {
   /**
    * When the allowlist closes, as an ISO instant in UTC — so the deadline is
    * the same moment for everyone, whatever timezone they open the page in,
-   * and the countdown is a real figure rather than a fresh 24h per visitor.
+   * and the countdown is a real figure rather than a fresh 72h per visitor.
    *
-   * PLACEHOLDER. Set this to the real closing time before launch; every
-   * countdown on the site reads from it and flips to "clearance closed" on
-   * its own once it passes.
+   * A fixed instant, not a duration: "72 hours" has to be 72 hours from the
+   * announcement, and a window computed per visit would give the last person
+   * to arrive as long as the first.
+   *
+   * ==> SET THIS ON LAUNCH DAY. It currently reads 72 hours from when the
+   * change was made, which is only the right answer if the list opens the
+   * same day. Every countdown on the site reads from it and flips to closed
+   * on its own once it passes.
    */
-  closesAt: "2026-10-01T20:00:00Z",
+  closesAt: "2026-09-29T10:00:00Z",
 } as const;
 
 /** The headline the drop is announced with. */
