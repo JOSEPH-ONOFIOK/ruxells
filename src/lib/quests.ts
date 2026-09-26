@@ -46,18 +46,45 @@ Only 1970 ITEMS coming on Robin-hood.
 Join →`;
 
 /**
- * The posts a quote may point at — newest first.
+ * The posts a quote may point at, newest first.
  *
- * A list rather than one id, because the announcement post can be replaced
- * mid-drop. Rotating a single id would reject everyone who had already quoted
- * the previous one, stranding entries that were honestly earned; keeping the
- * old id here costs nothing and keeps those people valid.
+ * Set as NEXT_PUBLIC_ACCEPTED_POSTS on the host — comma-separated, and
+ * either full URLs or bare ids, because a URL is what anybody actually has
+ * to hand:
  *
- * PLACEHOLDER — empty until the announcement is posted. While it is empty the
- * gate can only require a quote of the account, not of one specific post, so
- * fill it in before launch.
+ *   NEXT_PUBLIC_ACCEPTED_POSTS=https://x.com/ruxxellsHQ/status/1234…,1233…
+ *
+ * A list rather than one id, because the announcement can be replaced
+ * mid-drop. Rotating a single id would reject everyone who had already
+ * quoted the previous one, stranding entries that were honestly earned;
+ * keeping the old id costs nothing and keeps those people valid.
+ *
+ * NEXT_PUBLIC_ because this file is imported by the clearance form, which
+ * is a client component — a bare env var would be undefined in the browser
+ * and the quote button would link at the profile instead of the post. The
+ * value is a post id, which is public the moment it is posted, so there is
+ * nothing here that should not reach the browser.
  */
-export const ACCEPTED_POST_IDS: readonly string[] = [];
+function parsePostIds(raw: string | undefined): readonly string[] {
+  if (!raw) return [];
+
+  return raw
+    .split(",")
+    .map((part) => {
+      const trimmed = part.trim();
+      // Accept a whole URL and take the id out of it, so nobody has to
+      // hand-extract the number from something they just copied.
+      const fromUrl = /\/status\/(\d{5,25})/.exec(trimmed);
+      return fromUrl ? fromUrl[1] : trimmed;
+    })
+    // Anything that is not a plausible id is dropped rather than kept: a
+    // typo that reached the list would silently reject every real quote.
+    .filter((id) => /^\d{5,25}$/.test(id));
+}
+
+export const ACCEPTED_POST_IDS: readonly string[] = parsePostIds(
+  process.env.NEXT_PUBLIC_ACCEPTED_POSTS,
+);
 
 /** The post the quest links to and asks people to quote. */
 export const PINNED_POST_ID: string | undefined = ACCEPTED_POST_IDS[0];
@@ -65,8 +92,10 @@ export const PINNED_POST_ID: string | undefined = ACCEPTED_POST_IDS[0];
 /**
  * True when a quote points at a post we still accept.
  *
- * With no ids configured every post passes this check — the verifier still
+ * With nothing configured every post passes this check — the verifier still
  * enforces authorship and the phrase, so the gate holds, just more loosely.
+ * That is what lets the flow be tested before the announcement exists, and
+ * it is the one thing to set before the list opens.
  */
 export function isAcceptedPost(id: string): boolean {
   if (ACCEPTED_POST_IDS.length === 0) return true;
