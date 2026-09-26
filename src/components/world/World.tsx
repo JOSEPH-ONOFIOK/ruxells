@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiArrowUpRight } from "react-icons/fi";
+import { X_ACCOUNT } from "@/lib/quests";
 import { DROP } from "@/lib/sectors";
 import { Intro } from "../Intro";
 import { Gallery } from "./Gallery";
@@ -116,6 +117,31 @@ export function World({
             </Link>
           </motion.div>
         </section>
+
+        {/* The only place the account is linked outside the quests. Everything
+            the drop announces goes out there, so a page that never points at
+            it leaves people with nowhere to follow. */}
+        <footer className="border-t-2 border-line px-5 py-8 sm:px-8">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-4">
+            <Image
+              src="/brand/wordmark-lime.png"
+              alt="RUXXELLS"
+              width={866}
+              height={245}
+              className="pixelated h-4 w-auto opacity-70"
+            />
+
+            <a
+              href={`https://x.com/${X_ACCOUNT}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="eyebrow inline-flex items-center gap-1.5 text-ash transition-colors hover:text-lime"
+            >
+              @{X_ACCOUNT}
+              <FiArrowUpRight className="h-3 w-3" />
+            </a>
+          </div>
+        </footer>
       </main>
     </div>
   );

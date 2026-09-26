@@ -1,10 +1,18 @@
 /** Shared by the client checklist and the server-side submit guard. */
 
 /**
- * PLACEHOLDER — set this to the real Ruxxells X handle before launch.
- * Without it the follow and quote links point nowhere useful.
+ * The account every quest points at.
+ *
+ * One constant rather than a handle written into each link: the follow
+ * intent, the quote intent, the pinned-post URL and the server-side check
+ * that a quote really quotes us all read it, so a change of account is one
+ * edit and cannot leave a stale link behind.
+ *
+ * Case is preserved for display but never compared — the verifier
+ * lowercases both sides, because X reports the handle in whatever case the
+ * owner set it and a case-sensitive check would reject honest entries.
  */
-export const X_ACCOUNT = "ruxxells";
+export const X_ACCOUNT = "ruxxellsHQ";
 
 /**
  * The exact text a quote post has to contain. The server checks for it after
