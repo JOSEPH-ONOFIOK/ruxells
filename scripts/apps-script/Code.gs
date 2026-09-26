@@ -29,10 +29,25 @@
  * rather than guessed at from behaviour — Apps Script silently keeps serving
  * the old copy if a deployment is not updated, and that is very hard to spot.
  */
-var SCRIPT_VERSION = 2;
+var SCRIPT_VERSION = 3;
 
 /** Tab the entries live on. Created on first write if missing. */
 var SHEET_NAME = 'Clearance';
+
+/**
+ * The spreadsheet to write to, by id, or '' when this script is bound to one.
+ *
+ * A script created from Extensions → Apps Script inside a sheet is bound to
+ * it and getActiveSpreadsheet() finds it. A standalone script — one made at
+ * script.new — has no active spreadsheet, and every sheet call fails with
+ * "unable to open the file at present" while ?version keeps working, because
+ * that path returns before touching the sheet. It is a confusing failure to
+ * read, so this exists.
+ *
+ * The id is the long string in the sheet's URL:
+ *   docs.google.com/spreadsheets/d/<THIS PART>/edit
+ */
+var SPREADSHEET_ID = '';
 
 /**
  * How many spots exist, or 0 for no limit.
@@ -200,7 +215,17 @@ function doPost(e) {
 // --- helpers ----------------------------------------------------------
 
 function getSheet() {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var ss = SPREADSHEET_ID
+    ? SpreadsheetApp.openById(SPREADSHEET_ID)
+    : SpreadsheetApp.getActiveSpreadsheet();
+
+  if (!ss) {
+    throw new Error(
+      'No spreadsheet. Either bind this script to one (Extensions → Apps ' +
+        'Script from inside the sheet) or set SPREADSHEET_ID above.',
+    );
+  }
+
   var sheet = ss.getSheetByName(SHEET_NAME);
 
   if (!sheet) {

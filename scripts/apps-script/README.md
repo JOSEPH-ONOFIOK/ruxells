@@ -11,8 +11,14 @@ written there disappears with the instance.
 
 1. Create a new spreadsheet at [sheets.new](https://sheets.new). Name it
    something you will recognise in six months.
-2. **Extensions → Apps Script**. Delete whatever is in `Code.gs` and paste
-   this file in its place.
+2. **From inside that sheet**, open **Extensions → Apps Script**. Delete
+   whatever is in `Code.gs` and paste this file in its place.
+
+   Starting from `script.new` instead makes a *standalone* script with no
+   sheet attached, and every write fails with "unable to open the file at
+   present" while `?version` keeps answering — a confusing pair of symptoms.
+   If you have already done that, set `SPREADSHEET_ID` at the top of the
+   file to the long id in your sheet's URL rather than starting over.
 3. **Deploy → New deployment**, gear icon → **Web app**.
    - Execute as: **Me**
    - Who has access: **Anyone**
@@ -29,8 +35,11 @@ so there is no sheet to set up by hand.
 
 ```bash
 curl "<your /exec url>"            # -> {"count":0}
-curl "<your /exec url>?version"    # -> {"version":1}
+curl "<your /exec url>?version"    # -> {"version":3}
 ```
+
+Both have to answer JSON. If `?version` works and the bare call returns
+HTML, the script is not attached to a spreadsheet — see step 2.
 
 `?version` exists because **Apps Script keeps serving the old copy until a
 deployment is updated**, and nothing in the editor says so. If the version
