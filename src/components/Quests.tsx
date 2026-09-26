@@ -49,6 +49,7 @@ export function Quests({
   count,
   clock,
   locked,
+  referral,
 }: {
   state: QuestState;
   onChange: (next: QuestState) => void;
@@ -63,6 +64,8 @@ export function Quests({
   clock?: string;
   /** Dims the channels until X is connected; the header stays lit. */
   locked?: boolean;
+  /** The poster's own referral link, for the quote step to carry. */
+  referral?: string;
 }) {
   const gateCleared = check.state === "ok";
   const done = QUESTS.filter((q) => isQuestDone(q.id, state, username)).length;
@@ -95,6 +98,7 @@ export function Quests({
             check={check}
             onCheckChange={onCheckChange}
             sealed={i > GATE_INDEX && !gateCleared}
+            referral={referral}
           />
         ))}
       </ol>
@@ -179,6 +183,7 @@ function Channel({
   check,
   onCheckChange,
   sealed,
+  referral,
 }: {
   quest: (typeof QUESTS)[number];
   index: number;
@@ -188,9 +193,11 @@ function Channel({
   check: QuoteCheck;
   onCheckChange: (next: QuoteCheck) => void;
   sealed: boolean;
+  /** The poster's own referral link, folded into the quote text. */
+  referral?: string;
 }) {
   const done = isQuestDone(quest.id, state, username);
-  const link = questLinkFor(quest.id, PINNED_POST_ID);
+  const link = questLinkFor(quest.id, PINNED_POST_ID, referral);
 
   // A channel opens when it is reached and closes once it is clear, so the
   // panel only ever shows the step actually being worked on. Overridable —

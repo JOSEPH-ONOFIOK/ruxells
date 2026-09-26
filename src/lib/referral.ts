@@ -1,14 +1,21 @@
 /**
  * Referral codes.
  *
- * Derived from the wallet address rather than stored, so the same wallet
- * always produces the same code and nothing has to be looked up to render a
- * link. It also means a code cannot be claimed twice or lost with a row.
+ * Derived from the connected X handle rather than stored, so the same
+ * account always produces the same code and nothing has to be looked up to
+ * render a link.
  *
- * This is not a secret: anyone holding an address can compute its code, and
+ * The handle rather than the wallet, because of when the link is needed: the
+ * quote is step three and the wallet is not entered until all four steps
+ * clear, so a wallet-derived code does not exist yet at the moment someone
+ * is asked to post. The handle is known from step one. Attribution still
+ * lands on a single wallet, because the sheet records the X user id beside
+ * it.
+ *
+ * This is not a secret: anyone who knows a handle can compute its code, and
  * that is fine — a referral link is meant to be shared. What it must not do
- * is let someone guess *whose* link they are looking at, which is why the
- * code is a hash rather than a slice of the address itself.
+ * is be guessable as *whose* link it is from the code alone, which is why it
+ * is a hash rather than a slice of the handle.
  */
 
 const ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -35,14 +42,14 @@ function hash(input: string, seed: number): number {
 }
 
 /**
- * The code for a wallet: six characters from an alphabet with no O/0 or I/1,
+ * The code for a handle: six characters from an alphabet with no O/0 or I/1,
  * because these get read aloud and typed by hand.
  */
-export function referralCode(address: string): string {
-  // Lowercased first: the same address in checksummed and plain form has to
-  // produce the same code, or a wallet's link changes depending on which
-  // client reported it.
-  const a = address.toLowerCase();
+export function referralCode(handle: string): string {
+  // Lowercased and stripped of a leading @: X reports a handle in whatever
+  // case its owner set, and someone typing their own would likely add the @.
+  // All three spellings have to produce the same code.
+  const a = handle.trim().replace(/^@/, "").toLowerCase();
 
   // Two independently seeded hashes, three symbols drawn from each. Six
   // symbols need 30 bits, and taking them all from one 32-bit value by
@@ -67,12 +74,27 @@ export function referralCode(address: string): string {
   return out;
 }
 
-/** The link someone shares. */
-export function referralLink(address: string, origin: string): string {
-  return `${origin}/grid?ref=${referralCode(address)}`;
+/**
+ * The link someone shares.
+ *
+ * Points at the clearance page rather than a landing page of its own: the
+ * whole purpose of a referral here is to bring somebody to the four steps,
+ * and a hop through an intermediate page is one more place to lose them.
+ */
+export function referralLink(handle: string, origin: string): string {
+  return `${origin}/clearance?ref=${referralCode(handle)}`;
 }
 
-/** What gets posted, ready for X's intent URL. */
-export function referralShareText(): string {
-  return "Claiming my spot on the RUXXELLS grid";
+/** The query key, in one place so the reader and the writer cannot drift. */
+export const REF_PARAM = "ref";
+
+/**
+ * A code is only usable if it looks like one.
+ *
+ * Anything can arrive in a query string, and this value is written to a
+ * spreadsheet — so it is checked against the alphabet it was generated from
+ * rather than trusted.
+ */
+export function isReferralCode(value: string): boolean {
+  return /^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(value);
 }

@@ -6,6 +6,7 @@ import {
   type Submission,
 } from "@/lib/allowlist-store";
 import { QUESTS, linkBelongsTo, parsePostLink } from "@/lib/quests";
+import { isReferralCode, referralCode } from "@/lib/referral";
 import { verifyQuotePost } from "@/lib/x-verify";
 import { currentAccount } from "@/lib/x-session";
 
@@ -135,11 +136,26 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  /**
+   * Who referred them, if anyone.
+   *
+   * Checked against the alphabet it was generated from rather than trusted:
+   * it arrives from a query string the visitor controls and ends up written
+   * to a spreadsheet. An unrecognisable code is dropped rather than
+   * rejected — a bad referral is not a reason to refuse a real signup.
+   */
+  const refRaw = String(body.referredBy ?? "").trim();
+  const referredBy = isReferralCode(refRaw) ? refRaw : "";
+
   const submission: Submission = {
     handle: `@${rawHandle}`,
     wallet,
     xUserId: account?.id ?? "",
     quoteLink: String(quests.quote ?? "").trim(),
+    // Nobody refers themselves: the code is derived from the handle, so a
+    // self-referral is someone pasting their own link back in.
+    referredBy:
+      referredBy && referredBy !== referralCode(rawHandle) ? referredBy : "",
   };
 
   try {

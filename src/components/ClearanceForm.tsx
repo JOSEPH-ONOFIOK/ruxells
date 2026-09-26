@@ -1,7 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FiArrowUpRight, FiCheck, FiLock } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
@@ -14,10 +19,48 @@ import {
 import { Quests, type QuoteCheck } from "./Quests";
 import { clearQuestState, useQuestState } from "@/lib/quest-store";
 import { allQuestsDone, claimShareUrl } from "@/lib/quests";
+import { isReferralCode, REF_PARAM, referralLink } from "@/lib/referral";
 import { DROP } from "@/lib/sectors";
 import { pad, useCountdown } from "./use-countdown";
 
 type Status = "idle" | "submitting" | "success" | "error";
+
+const REF_KEY = "ruxxells.ref";
+
+/**
+ * Who sent this person here.
+ *
+ * Kept in sessionStorage rather than read from the URL each render, because
+ * the OAuth round trip drops the query string: someone arriving on a
+ * referral link and then connecting X comes back to a bare /clearance, and
+ * the code would be lost exactly when it is about to be submitted.
+ *
+ * Read through a store rather than set from an effect so the value is there
+ * on the first paint, and so the read does not cost a second render.
+ */
+const referrerStore = {
+  subscribe: () => () => {},
+  get: (): string | null => {
+    try {
+      const fromUrl = new URLSearchParams(window.location.search).get(
+        REF_PARAM,
+      );
+
+      if (fromUrl && isReferralCode(fromUrl)) {
+        sessionStorage.setItem(REF_KEY, fromUrl);
+        return fromUrl;
+      }
+
+      const stored = sessionStorage.getItem(REF_KEY);
+      return stored && isReferralCode(stored) ? stored : null;
+    } catch {
+      // Blocked storage costs the attribution, not the signup.
+      return null;
+    }
+  },
+  // No URL and no session on the server.
+  getServer: (): string | null => null,
+};
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -46,6 +89,38 @@ export function ClearanceForm({
     handle: string;
   } | null>(null);
   const [count, setCount] = useState<number | null>(null);
+
+  /**
+   * The poster's own referral link, once X is connected.
+   *
+   * Built from the handle rather than the wallet because the quote is step
+   * three and the wallet is not entered until all four clear — there is no
+   * wallet-derived code to hand out at the moment it is needed.
+   *
+   * The origin comes from the browser rather than a constant so a preview
+   * deploy hands out preview links instead of production ones.
+   */
+  const referral = useMemo(
+    () =>
+      x.username && typeof window !== "undefined"
+        ? referralLink(x.username, window.location.origin)
+        : undefined,
+    [x.username],
+  );
+
+  /**
+   * Who sent this person here.
+   *
+   * Read once on mount and kept, because the OAuth round trip drops the
+   * query string: someone arriving on a referral link and then connecting X
+   * comes back to a bare /clearance, and the code would be lost exactly
+   * when it is about to be submitted.
+   */
+  const referredBy = useSyncExternalStore(
+    referrerStore.subscribe,
+    referrerStore.get,
+    referrerStore.getServer,
+  );
 
   const { left, closed } = useCountdown(DROP.closesAt);
 
@@ -86,6 +161,7 @@ export function ClearanceForm({
           wallet: wallet.trim(),
           quests,
           handle: x.username,
+          referredBy,
         }),
       });
       const data = await res.json();
@@ -137,6 +213,7 @@ export function ClearanceForm({
         onCheckChange={setQuoteCheck}
         count={count}
         locked={needsConnect}
+        referral={referral}
         clock={
           closed
             ? "Door shut"

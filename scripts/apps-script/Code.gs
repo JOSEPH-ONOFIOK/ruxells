@@ -8,7 +8,7 @@
  * Contract with src/lib/allowlist-store.ts:
  *
  *   GET  ->  { count: number }
- *   POST {handle, wallet, xUserId, quoteLink, inviteCode}
+ *   POST {handle, wallet, xUserId, quoteLink, inviteCode, referredBy}
  *        ->  { position: number }       on success
  *        ->  { error: "duplicate" }     wallet already listed
  *        ->  { error: "duplicate_x" }   X account already listed
@@ -29,7 +29,7 @@
  * rather than guessed at from behaviour — Apps Script silently keeps serving
  * the old copy if a deployment is not updated, and that is very hard to spot.
  */
-var SCRIPT_VERSION = 1;
+var SCRIPT_VERSION = 2;
 
 /** Tab the entries live on. Created on first write if missing. */
 var SHEET_NAME = 'Clearance';
@@ -67,6 +67,7 @@ var HEADERS = [
   'Clearance Code',
   'X User ID',
   'Quote Link',
+  'Referred By',
 ];
 
 // --- entry points -----------------------------------------------------
@@ -78,6 +79,13 @@ function doGet(e) {
     // Which copy is deployed.
     if (p.version !== undefined) {
       return json({ version: SCRIPT_VERSION });
+    }
+
+    // ?referrals totals how many each code brought in, highest first. The
+    // site does not call it yet; it is what a leaderboard reads, and
+    // counting rows by hand is how a published number ends up wrong.
+    if (p.referrals !== undefined) {
+      return json({ referrals: countReferrals() });
     }
 
     // What the site polls for the "N through the door" counter.
@@ -114,6 +122,9 @@ function doPost(e) {
     var code = String(body.inviteCode || '').trim();
     var xUserId = String(body.xUserId || '').trim();
     var quoteLink = String(body.quoteLink || '').trim();
+    // Already validated site-side against the alphabet it was generated
+    // from; empty when nobody referred them.
+    var referredBy = String(body.referredBy || '').trim();
 
     if (!handle || !wallet || !code) {
       return json({ error: 'Missing handle, wallet or clearance code.' });
@@ -174,6 +185,7 @@ function doPost(e) {
     row[HEADERS.indexOf('Clearance Code')] = code;
     row[HEADERS.indexOf('X User ID')] = xUserId;
     row[HEADERS.indexOf('Quote Link')] = quoteLink;
+    row[HEADERS.indexOf('Referred By')] = referredBy;
     sheet.appendRow(row);
 
     // Position is 1-based and counts entries, not spreadsheet rows.
@@ -209,6 +221,30 @@ function getSheet() {
 function countEntries() {
   var sheet = getSheet();
   return Math.max(0, sheet.getLastRow() - 1);
+}
+
+/**
+ * How many entries each referral code brought in.
+ *
+ * One read of the column rather than a query per code: the sheet is small
+ * now and this keeps it a single call however large it gets.
+ */
+function countReferrals() {
+  var sheet = getSheet();
+  var rows = sheet.getLastRow() - 1;
+  if (rows < 1) return {};
+
+  var col = HEADERS.indexOf('Referred By') + 1;
+  var values = sheet.getRange(2, col, rows, 1).getValues();
+  var out = {};
+
+  for (var i = 0; i < values.length; i++) {
+    var code = String(values[i][0] || '').trim();
+    if (!code) continue;
+    out[code] = (out[code] || 0) + 1;
+  }
+
+  return out;
 }
 
 function json(obj) {

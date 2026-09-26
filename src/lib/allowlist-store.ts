@@ -21,6 +21,8 @@ export type Entry = {
   joinedAt: string;
   xUserId?: string;
   quoteLink?: string;
+  /** The code of whoever sent them, or empty. */
+  referredBy?: string;
 };
 
 export type Submission = {
@@ -28,6 +30,7 @@ export type Submission = {
   wallet: string;
   xUserId: string;
   quoteLink: string;
+  referredBy: string;
 };
 
 export type SubmitResult =
@@ -73,6 +76,7 @@ async function submitToLocalFile(sub: Submission): Promise<SubmitResult> {
     joinedAt: new Date().toISOString(),
     xUserId: sub.xUserId,
     quoteLink: sub.quoteLink,
+    referredBy: sub.referredBy,
   });
   await writeLocalEntries(entries);
 

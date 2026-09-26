@@ -150,10 +150,24 @@ export const pinnedPostUrl = (postId?: string) =>
 export const followUrl = () =>
   `https://x.com/intent/follow?screen_name=${X_ACCOUNT}`;
 
-export const quoteIntentUrl = (postId?: string) =>
-  `https://x.com/intent/post?text=${encodeURIComponent(QUOTE_PHRASE)}${
+/**
+ * The quote intent, carrying the poster's own referral link.
+ *
+ * X's `url` parameter is what makes a post a quote, so the pinned post has
+ * to go there. The referral link rides in the text instead — which is also
+ * where it is visible to whoever reads the post, rather than folded into a
+ * card.
+ *
+ * Without a handle there is no code to attach and the text is the phrase
+ * alone: the link is a bonus on a step that has to work regardless.
+ */
+export const quoteIntentUrl = (postId?: string, referral?: string) => {
+  const text = referral ? `${QUOTE_PHRASE}\n\n${referral}` : QUOTE_PHRASE;
+
+  return `https://x.com/intent/post?text=${encodeURIComponent(text)}${
     postId ? `&url=${encodeURIComponent(pinnedPostUrl(postId))}` : ""
   }`;
+};
 
 /**
  * What someone posts once they're cleared, and the link that opens X with it
@@ -169,9 +183,13 @@ export const claimShareUrl = (siteUrl?: string) =>
     siteUrl ? `&url=${encodeURIComponent(siteUrl)}` : ""
   }`;
 
-export function questLinkFor(id: QuestId, postId?: string) {
+export function questLinkFor(
+  id: QuestId,
+  postId?: string,
+  referral?: string,
+) {
   if (id === "follow") return followUrl();
-  if (id === "quote") return quoteIntentUrl(postId);
+  if (id === "quote") return quoteIntentUrl(postId, referral);
   return pinnedPostUrl(postId);
 }
 
