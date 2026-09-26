@@ -68,7 +68,19 @@ export function Quests({
   referral?: string;
 }) {
   const gateCleared = check.state === "ok";
-  const done = QUESTS.filter((q) => isQuestDone(q.id, state, username)).length;
+  /**
+   * How many steps are actually finished.
+   *
+   * The quote only counts once X has confirmed it: isQuestDone accepts it
+   * on the shape of the link alone, so without this the bar would read
+   * full while the submit button stayed disabled, which is a worse thing to
+   * look at than an honest four of five.
+   */
+  const done = QUESTS.filter(
+    (q) =>
+      isQuestDone(q.id, state, username) &&
+      (!q.needsLink || check.state === "ok"),
+  ).length;
 
   return (
     <div className="panel ticked overflow-hidden">
@@ -199,22 +211,56 @@ function Channel({
   const done = isQuestDone(quest.id, state, username);
   const link = questLinkFor(quest.id, PINNED_POST_ID, referral);
 
-  // A channel opens when it is reached and closes once it is clear, so the
-  // panel only ever shows the step actually being worked on. Overridable —
-  // clicking the header reopens a finished one.
+  /**
+   * Whether this step counts as finished for the purpose of collapsing.
+   *
+   * The quote step is the exception: `isQuestDone` accepts it on the shape
+   * of the link alone, so a well-formed URL that X has not confirmed — or
+   * has outright rejected — would close the panel and hide the error
+   * explaining why. It has to have actually verified.
+   */
+  const settled = quest.needsLink ? done && check.state === "ok" : done;
+
+  // A step opens when it is reached and closes once it is settled, so the
+  // panel only ever shows the one being worked on. Overridable — clicking
+  // the header reopens a finished one.
   const [open, setOpen] = useState(index === 0);
-  const wasDone = useRef(done);
+  const wasSettled = useRef(settled);
 
   useEffect(() => {
-    if (done && !wasDone.current) setOpen(false);
-    if (!done && wasDone.current) setOpen(true);
-    wasDone.current = done;
-  }, [done]);
+    if (settled && !wasSettled.current) setOpen(false);
+    if (!settled && wasSettled.current) setOpen(true);
+    wasSettled.current = settled;
+  }, [settled]);
+
+  /**
+   * A rejection is worth interrupting for.
+   *
+   * The reason already prints under the field, but somebody who has just
+   * pasted a link and looked away misses it and waits for a step that is
+   * never going to clear. The modal says so once, and only for a verdict X
+   * actually returned — not for a half-typed URL.
+   */
+  const [alerted, setAlerted] = useState<string | null>(null);
+  const lastReason = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (check.state !== "bad") {
+      lastReason.current = null;
+      return;
+    }
+
+    // Only when the reason changes, so correcting one mistake into another
+    // prompts again but a re-render does not.
+    if (lastReason.current === check.reason) return;
+    lastReason.current = check.reason;
+    setAlerted(check.reason);
+  }, [check]);
 
   return (
     <li
       className={`relative border-b border-line last:border-b-0 transition-colors ${
-        sealed ? "bg-void" : done ? "bg-lime/[0.04]" : ""
+        sealed ? "bg-void" : settled ? "bg-lime/[0.04]" : ""
       }`}
     >
       <button
@@ -229,7 +275,7 @@ function Channel({
             word that between them said the same thing four times. */}
         <span
           className={`flex h-6 w-6 shrink-0 items-center justify-center border text-[10px] font-bold tabular-nums transition-colors ${
-            done && !sealed
+            settled && !sealed
               ? "border-lime bg-lime text-void"
               : sealed
                 ? "border-line text-ash"
@@ -238,7 +284,7 @@ function Channel({
         >
           {sealed ? (
             <FiLock className="h-3 w-3" />
-          ) : done ? (
+          ) : settled ? (
             <FiCheck className="h-3.5 w-3.5" />
           ) : (
             index + 1
@@ -247,7 +293,7 @@ function Channel({
 
         <span
           className={`flex-1 truncate text-sm font-bold ${
-            sealed ? "text-ash" : done ? "text-lime" : "text-chalk"
+            sealed ? "text-ash" : settled ? "text-lime" : "text-chalk"
           }`}
         >
           {quest.title}
@@ -354,7 +400,97 @@ function Channel({
           Unlocks once step {GATE_INDEX + 1} is verified.
         </p>
       )}
+
+      <Rejected
+        reason={alerted}
+        onClose={() => setAlerted(null)}
+        postUrl={link}
+      />
     </li>
+  );
+}
+
+/**
+ * What X said, when it said no.
+ *
+ * A dialog rather than a toast: the step cannot proceed until this is
+ * fixed, and the reason is usually something specific to correct — the
+ * wrong account, a missing line, a post that is not a quote. It carries a
+ * way back to the post so the fix is one click from the explanation.
+ */
+function Rejected({
+  reason,
+  onClose,
+  postUrl,
+}: {
+  reason: string | null;
+  onClose: () => void;
+  postUrl: string;
+}) {
+  useEffect(() => {
+    if (!reason) return;
+
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [reason, onClose]);
+
+  return (
+    <AnimatePresence>
+      {reason && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          onClick={onClose}
+          role="alertdialog"
+          aria-modal="true"
+          aria-label="That post did not check out"
+        >
+          <div aria-hidden className="absolute inset-0 bg-void/80 backdrop-blur-sm" />
+
+          <motion.div
+            onClick={(e) => e.stopPropagation()}
+            className="panel ticked relative w-full max-w-sm p-6"
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <p className="eyebrow text-red-400">Not accepted</p>
+            <h3 className="wordmark mt-2.5 text-xl text-chalk">
+              That post didn&rsquo;t check out
+            </h3>
+            <p className="mt-3 text-sm leading-relaxed text-ash">{reason}</p>
+
+            <div className="mt-6 flex flex-wrap gap-2">
+              <a
+                href={postUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onClose}
+                className="pressable inline-flex items-center gap-1.5 border-2 border-lime bg-lime px-4 py-2.5 text-[11px] font-bold tracking-wider text-void uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
+              >
+                Post again
+                <FiArrowUpRight className="h-3 w-3" />
+              </a>
+
+              <button
+                type="button"
+                onClick={onClose}
+                className="pressable border-2 border-line px-4 py-2.5 text-[11px] font-bold tracking-wider text-ash uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors hover:border-lime hover:text-lime"
+              >
+                Fix the link
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
