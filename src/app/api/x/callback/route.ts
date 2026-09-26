@@ -58,7 +58,17 @@ export async function GET(req: NextRequest) {
     res.cookies.delete(STATE_COOKIE);
     res.cookies.delete(VERIFIER_COOKIE);
     return res;
-  } catch {
+  } catch (err) {
+    /**
+     * The visitor gets "try again"; the log gets the reason.
+     *
+     * Swallowing this entirely made a wrong client secret, an unregistered
+     * callback and X being down all look identical from the outside — and
+     * they need different fixes. The message is X's own status line, which
+     * carries no token: the code is already spent and the secret is never
+     * in the thrown error.
+     */
+    console.error("[x/callback]", err instanceof Error ? err.message : err);
     return back(origin, "failed");
   }
 }
