@@ -1,10 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
-import { PIECES, type Piece } from "@/lib/gallery";
+import { FACTIONS, PIECES, type Faction, type Piece } from "@/lib/gallery";
 
 /**
  * The collection, as a grid you can open.
@@ -20,9 +20,18 @@ import { PIECES, type Piece } from "@/lib/gallery";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-type Filter = "all" | "rooms" | "frames";
+/**
+ * What the grid is showing.
+ *
+ * Two kinds of filter in one control: where a piece sits on the site (all,
+ * the four rooms, the rest) and which world it comes from. They are one list
+ * rather than two rows of chips because they are mutually exclusive — you
+ * are looking at one cut of the collection at a time, and two independent
+ * controls would imply combinations that mostly return nothing.
+ */
+type Filter = "all" | "rooms" | "frames" | Faction;
 
-const FILTERS: [Filter, string][] = [
+const BASE_FILTERS: [Filter, string][] = [
   ["all", "Everything"],
   ["rooms", "The descent"],
   ["frames", "The rest"],
@@ -32,9 +41,28 @@ export function GalleryGrid() {
   const [filter, setFilter] = useState<Filter>("all");
   const [open, setOpen] = useState<number | null>(null);
 
-  const shown = PIECES.filter((p) =>
-    filter === "all" ? true : filter === "rooms" ? p.featured : !p.featured,
-  );
+  const shown = PIECES.filter((p) => {
+    if (filter === "all") return true;
+    if (filter === "rooms") return p.featured;
+    if (filter === "frames") return !p.featured;
+    return p.faction === filter;
+  });
+
+  /**
+   * Only the worlds that actually have pieces in them, with their counts: a
+   * chip that leads to an empty grid is a dead end, and the number is what
+   * makes it worth pressing.
+   *
+   * Memoised because PIECES never changes, and rebuilding the map on every
+   * render hands the callbacks below a new dependency each time.
+   */
+  const counts = useMemo(() => {
+    const out = new Map<Faction, number>();
+    for (const piece of PIECES) {
+      out.set(piece.faction, (out.get(piece.faction) ?? 0) + 1);
+    }
+    return out;
+  }, []);
 
   // Dealt alternately rather than cut down the middle, so the two columns
   // hold a mix of rooms and frames instead of all the named pieces landing
@@ -48,6 +76,13 @@ export function GalleryGrid() {
     (piece: Piece) => setOpen(shown.findIndex((p) => p.id === piece.id)),
     [shown],
   );
+
+  const choose = useCallback((next: Filter) => {
+    setFilter(next);
+    // The open index refers to the old list, so it would point at a
+    // different piece once the filter changes.
+    setOpen(null);
+  }, []);
 
   // Paging wraps, so the arrows never dead-end on the first or last piece.
   const step = useCallback(
@@ -120,27 +155,33 @@ export function GalleryGrid() {
 
   return (
     <>
-      <div className="mb-8 flex flex-wrap gap-2">
-        {FILTERS.map(([key, label]) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => {
-              setFilter(key);
-              // The open index refers to the old list, so it would point at
-              // a different piece once the filter changes.
-              setOpen(null);
-            }}
-            aria-pressed={filter === key}
-            className={`pressable border-2 px-3.5 py-2 text-[11px] font-bold tracking-wider uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors ${
-              filter === key
-                ? "border-lime bg-lime text-void"
-                : "border-line text-ash hover:border-lime hover:text-lime"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
+      <div className="mb-8 space-y-3">
+        <div className="flex flex-wrap gap-2">
+          {BASE_FILTERS.map(([key, label]) => (
+            <Chip
+              key={key}
+              active={filter === key}
+              onClick={() => choose(key)}
+              label={label}
+            />
+          ))}
+        </div>
+
+        {/* The worlds, on their own line and carrying their own colour, so
+            they read as a different axis from the three above rather than a
+            longer version of the same row. */}
+        <div className="flex flex-wrap gap-2">
+          {FACTIONS.filter((f) => counts.get(f.id)).map((f) => (
+            <Chip
+              key={f.id}
+              active={filter === f.id}
+              onClick={() => choose(f.id)}
+              label={f.name}
+              count={counts.get(f.id)}
+              tint={f.tint}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Two drifting columns on a phone, a mosaic from sm up. A 2x11 grid
@@ -297,6 +338,46 @@ function Tile({
           />
         )}
       </div>
+    </button>
+  );
+}
+
+/**
+ * One filter chip.
+ *
+ * A world's chip carries its own colour on the border when it is not the
+ * active one, which is what lets the row be read as six places rather than
+ * six words.
+ */
+function Chip({
+  active,
+  onClick,
+  label,
+  count,
+  tint,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  count?: number;
+  tint?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      style={active || !tint ? undefined : { borderColor: `${tint}66` }}
+      className={`pressable inline-flex items-center gap-1.5 border-2 px-3.5 py-2 text-[11px] font-bold tracking-wider uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.5)] transition-colors ${
+        active
+          ? "border-lime bg-lime text-void"
+          : "border-line text-ash hover:border-lime hover:text-lime"
+      }`}
+    >
+      {label}
+      {count !== undefined && (
+        <span className={active ? "text-void/60" : "text-ash"}>{count}</span>
+      )}
     </button>
   );
 }

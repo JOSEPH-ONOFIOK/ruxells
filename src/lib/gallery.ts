@@ -10,6 +10,53 @@ import { SECTORS } from "./sectors";
  * catalogue rather than a folder listing.
  */
 
+/**
+ * The worlds a piece can come from.
+ *
+ * Classified by the hue of the backdrop the artist painted behind each room
+ * rather than by anything in the art itself, because that is what actually
+ * separates them at a glance — and it is the same measure that decides the
+ * running order below, so the filters and the spread agree.
+ */
+export type Faction =
+  | "ice"
+  | "fire"
+  | "sand"
+  | "green"
+  | "violet"
+  | "void";
+
+export const FACTIONS: { id: Faction; name: string; tint: string }[] = [
+  { id: "ice", name: "Ice", tint: "#7fd4e8" },
+  { id: "fire", name: "Fire", tint: "#fe6458" },
+  { id: "sand", name: "Sand", tint: "#d8a643" },
+  { id: "green", name: "Overgrowth", tint: "#2cfe53" },
+  { id: "violet", name: "Deep", tint: "#a93cfa" },
+  { id: "void", name: "Void", tint: "#6f9ce0" },
+];
+
+/**
+ * Which world each frame belongs to.
+ *
+ * Measured off the corners of every source image rather than assigned by
+ * eye, so a frame cannot drift into the wrong group when the art is
+ * regenerated.
+ */
+const FRAME_FACTION: Record<string, Faction> = {
+  "01": "void", "02": "fire", "03": "ice", "04": "void", "05": "ice",
+  "06": "sand", "07": "ice", "08": "ice", "09": "ice", "10": "ice",
+  "11": "violet", "12": "void", "13": "green", "14": "ice", "15": "ice",
+  "16": "ice", "17": "sand", "18": "green",
+};
+
+/** The same, for the four named rooms. */
+const ROOM_FACTION: Record<string, Faction> = {
+  holding: "ice",
+  greenhouse: "fire",
+  rig: "ice",
+  tomb: "ice",
+};
+
 export type Piece = {
   id: string;
   src: string;
@@ -21,6 +68,8 @@ export type Piece = {
   tint?: string;
   /** True for the rooms that appear in the sectors section. */
   featured: boolean;
+  /** Which world it comes from. */
+  faction: Faction;
   /**
    * The animated version, where one exists.
    *
@@ -41,6 +90,7 @@ const ROOMS: Piece[] = SECTORS.map((sector) => ({
   label: sector.name,
   tint: sector.tint,
   featured: true,
+  faction: ROOM_FACTION[sector.id] ?? "void",
   gif: sector.gif,
 }));
 
@@ -75,6 +125,7 @@ const FRAMES: Piece[] = FRAME_ORDER.map((n) => {
     height: 1600,
     label: `#${n.padStart(4, "0")}`,
     featured: false,
+    faction: FRAME_FACTION[n] ?? "void",
     gif: LIVE_FRAMES.has(n) ? `/recon-live/${n}.gif` : undefined,
   };
 });
