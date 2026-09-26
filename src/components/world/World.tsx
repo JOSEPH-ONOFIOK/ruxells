@@ -53,20 +53,12 @@ export function World({ cleared }: { cleared: number | null }) {
           />
         </Link>
 
-        <div className="flex items-center gap-4">
-          <Link
-            href="/"
-            className="eyebrow text-ash transition-colors hover:text-lime"
-          >
-            ← The bay
-          </Link>
-          <Link
-            href="/gallery"
-            className="eyebrow text-ash transition-colors hover:text-lime"
-          >
-            Gallery
-          </Link>
-        </div>
+        <Link
+          href="/gallery"
+          className="eyebrow px-1 text-ash transition-colors hover:text-lime"
+        >
+          Gallery
+        </Link>
       </header>
 
       <main className="relative z-10">
