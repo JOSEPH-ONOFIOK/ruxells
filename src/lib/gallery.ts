@@ -50,15 +50,21 @@ const LIVE_FRAMES = new Set(["02", "05", "15"]);
 /**
  * The order the frames are shown in.
  *
- * Not 01..18: several of these are near-identical — two ice rooms, two lava
- * fields — and in file order they landed side by side, which reads as the
- * same picture printed twice. Ordered by repeatedly taking whichever frame
- * looks least like the one before it, which pushes the closest pair from a
- * difference of 8 to 29.
+ * Not 01..18. Half the set is ice — nine of eighteen — and in file order
+ * they arrived in blocks, so a row read as the same blue room four times.
+ * Sorting by overall similarity did not fix it either: what registers from
+ * across a page is the colour of the backdrop the artist painted, not how
+ * alike two rooms are.
+ *
+ * So each frame is classified by the hue of its corners — ice, fire, sand,
+ * green, violet, void — and the list is built by repeatedly taking whichever
+ * faction has the most left that is not the one just placed. With ice at
+ * half the set it has to appear every other slot, and it does: no two
+ * neighbours share a faction anywhere in the eighteen.
  */
 const FRAME_ORDER = [
-  "01", "10", "12", "15", "04", "16", "11", "09", "18",
-  "08", "13", "02", "03", "06", "07", "17", "05", "14",
+  "03", "01", "05", "04", "07", "06", "08", "13", "09",
+  "12", "10", "02", "14", "17", "15", "11", "16", "18",
 ];
 
 const FRAMES: Piece[] = FRAME_ORDER.map((n) => {

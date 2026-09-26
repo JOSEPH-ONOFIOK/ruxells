@@ -24,11 +24,27 @@ import {
  * going past. It costs nothing: the transform is the same either way.
  */
 
-const SHOTS = Array.from({ length: 18 }, (_, i) =>
-  String(i + 1).padStart(2, "0"),
-);
+/**
+ * The same faction-spread order the gallery uses.
+ *
+ * This strip was still running 01..18, which is why three ice rooms sat
+ * together on the top rail: the reorder had only been applied to the page
+ * they both draw from, not to this one.
+ */
+const SHOTS = [
+  "03", "01", "05", "04", "07", "06", "08", "13", "09",
+  "12", "10", "02", "14", "17", "15", "11", "16", "18",
+];
 
-/** Split so neither rail repeats a frame. */
+/**
+ * Cut in half rather than dealt alternately.
+ *
+ * Dealing every other frame looks like the fairer split and is the opposite:
+ * ice sits on every even slot of the spread order, so taking the evens
+ * collects all nine onto one rail. A straight slice inherits the
+ * alternation, and both rails come out with no two neighbours sharing a
+ * faction.
+ */
 const TOP = SHOTS.slice(0, 9);
 const BOTTOM = SHOTS.slice(9);
 
