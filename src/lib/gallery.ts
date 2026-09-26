@@ -3,12 +3,11 @@ import { SECTORS } from "./sectors";
 /**
  * Everything in the collection, as one list.
  *
- * The six rooms of the descent and the eighteen frames that didn't make it,
- * flattened so the gallery has a single thing to map over. The rooms keep
- * their names because they are named elsewhere on the site and it would read
- * as an oversight if the gallery called them "Frame 03"; the rest are
- * numbered, because inventing eighteen names for artwork nobody has written
- * a story for yet would be inventing lore, not describing it.
+ * The four rooms and the eighteen frames beside them, flattened so the
+ * gallery has a single thing to map over. The rooms keep their names because
+ * they are named elsewhere on the site; the rest carry a token number, which
+ * is what a piece in a collection is actually identified by and reads as a
+ * catalogue rather than a folder listing.
  */
 
 export type Piece = {
@@ -48,14 +47,27 @@ const ROOMS: Piece[] = SECTORS.map((sector) => ({
 /** The loose frames with an animated source, built by `scripts/room-gifs.py`. */
 const LIVE_FRAMES = new Set(["02", "05", "15"]);
 
-const FRAMES: Piece[] = Array.from({ length: 18 }, (_, i) => {
-  const n = String(i + 1).padStart(2, "0");
+/**
+ * The order the frames are shown in.
+ *
+ * Not 01..18: several of these are near-identical — two ice rooms, two lava
+ * fields — and in file order they landed side by side, which reads as the
+ * same picture printed twice. Ordered by repeatedly taking whichever frame
+ * looks least like the one before it, which pushes the closest pair from a
+ * difference of 8 to 29.
+ */
+const FRAME_ORDER = [
+  "01", "10", "12", "15", "04", "16", "11", "09", "18",
+  "08", "13", "02", "03", "06", "07", "17", "05", "14",
+];
+
+const FRAMES: Piece[] = FRAME_ORDER.map((n) => {
   return {
     id: `frame-${n}`,
     src: `/recon/${n}.jpeg`,
     width: 1600,
     height: 1600,
-    label: `Frame ${n}`,
+    label: `#${n.padStart(4, "0")}`,
     featured: false,
     gif: LIVE_FRAMES.has(n) ? `/recon-live/${n}.gif` : undefined,
   };

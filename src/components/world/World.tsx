@@ -21,7 +21,20 @@ import { Rooms } from "./Rooms";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
-export function World({ cleared }: { cleared: number | null }) {
+export function World({
+  cleared,
+  board,
+}: {
+  cleared: number | null;
+  /**
+   * The trade board, rendered on the server and handed in.
+   *
+   * This component is a client one, so it cannot await the price feed
+   * itself — taking the finished markup as a slot keeps the fetch off the
+   * browser entirely.
+   */
+  board?: React.ReactNode;
+}) {
   return (
     <div className="relative">
       <Intro />
@@ -65,6 +78,8 @@ export function World({ cleared }: { cleared: number | null }) {
         <Hero cleared={cleared} />
 
         <Rooms />
+
+        {board}
 
         <Gallery />
 

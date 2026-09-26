@@ -1,3 +1,4 @@
+import { Trade } from "@/components/world/Trade";
 import { World } from "@/components/world/World";
 import { countEntries } from "@/lib/allowlist-store";
 
@@ -21,5 +22,5 @@ async function clearedCount(): Promise<number | null> {
 }
 
 export default async function Home() {
-  return <World cleared={await clearedCount()} />;
+  return <World cleared={await clearedCount()} board={<Trade />} />;
 }
