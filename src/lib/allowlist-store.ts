@@ -34,7 +34,7 @@ export type Submission = {
 };
 
 export type SubmitResult =
-  | { position: number; clearanceCode: string }
+  | { position: number | null; clearanceCode: string }
   | { error: string };
 
 function newClearanceCode() {
@@ -116,7 +116,25 @@ async function submitToSheet(
   }
   if (data.error) throw new Error(String(data.error));
 
-  return { position: Number(data.position), clearanceCode };
+  /**
+   * The position, when the response actually carried one.
+   *
+   * Apps Script answers a POST with a 302 to googleusercontent.com, and a
+   * redirect turns the follow-up into a GET — so a successful write can come
+   * back as this script's GET response, `{count}`, rather than its POST
+   * response, `{position}`. Errors are small enough to be returned directly
+   * and arrive intact, which is why only the success path is affected.
+   *
+   * The row is written either way; only the number is missing. Falling back
+   * to the count keeps it right, and null rather than NaN means the receipt
+   * can leave the line out instead of printing "#NaN".
+   */
+  const position = Number(data.position ?? data.count);
+
+  return {
+    position: Number.isFinite(position) ? position : null,
+    clearanceCode,
+  };
 }
 
 async function countSheetEntries(webAppUrl: string) {
