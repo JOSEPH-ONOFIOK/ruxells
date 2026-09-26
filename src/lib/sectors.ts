@@ -36,7 +36,7 @@ export type Sector = {
  * promise that gets broken in public.
  */
 export const DROP = {
-  supply: "TBA",
+  supply: "1,970",
   price: "TBA",
   date: "TBA",
 

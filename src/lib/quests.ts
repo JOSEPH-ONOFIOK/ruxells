@@ -15,12 +15,35 @@
 export const X_ACCOUNT = "ruxxellsHQ";
 
 /**
- * The exact text a quote post has to contain. The server checks for it after
- * normalising case, whitespace and emoji variation selectors, so a quote that
- * picked up different spacing on its way through a client still passes — but
- * the words themselves have to be there.
+ * The founder's account.
+ *
+ * A separate constant rather than a second entry hard-coded into the quest
+ * list, for the same reason X_ACCOUNT is one: the follow intent and the
+ * quest title both read it, so changing who this is cannot leave one of
+ * them pointing at the old handle.
  */
-export const QUOTE_PHRASE = "The gate is open\n\nRUXXELLS\n\nMinting on Robinhood";
+export const FOUNDER_ACCOUNT = "buncobuddylj";
+
+/**
+ * The exact text a quote post has to contain.
+ *
+ * The server checks for it after normalising case, whitespace and emoji
+ * variation selectors, so a quote that picked up different spacing on its
+ * way through a client still passes — but the words themselves have to be
+ * there, contiguously.
+ *
+ * That last part decides where the referral link goes. The check is a
+ * substring match on the whole phrase, so anything inserted into the middle
+ * of it fails for everyone; the phrase ends on "Join →" precisely so the
+ * link can follow it and still leave the required text intact.
+ */
+export const QUOTE_PHRASE = `One WORLD → One OWNER.
+
+I just filled my application to grab a Ruxxell Onchain!
+
+Only 1970 ITEMS coming on Robin-hood.
+
+Join →`;
 
 /**
  * The posts a quote may point at — newest first.
@@ -50,7 +73,7 @@ export function isAcceptedPost(id: string): boolean {
   return ACCEPTED_POST_IDS.includes(id);
 }
 
-export type QuestId = "follow" | "boost" | "quote" | "tag";
+export type QuestId = "follow" | "founder" | "boost" | "quote" | "tag";
 
 export type Quest = {
   id: QuestId;
@@ -85,8 +108,17 @@ export const QUESTS: Quest[] = [
     still: "/recon/17.jpeg",
   },
   {
-    id: "boost",
+    id: "founder",
     n: "02",
+    title: `Follow @${FOUNDER_ACCOUNT}`,
+    detail: "The one who started it.\nWorth knowing who let you in.",
+    cta: "Open X",
+    needsLink: false,
+    still: "/recon/09.jpeg",
+  },
+  {
+    id: "boost",
+    n: "03",
     title: "Like + repost the pinned post",
     detail: "Signal doesn't carry on its own.\nPush it.",
     cta: "Open post",
@@ -95,7 +127,7 @@ export const QUESTS: Quest[] = [
   },
   {
     id: "quote",
-    n: "03",
+    n: "04",
     title: "Quote the pinned post",
     detail: "Say it in your own words, with this in it:",
     phrase: QUOTE_PHRASE,
@@ -105,7 +137,7 @@ export const QUESTS: Quest[] = [
   },
   {
     id: "tag",
-    n: "04",
+    n: "05",
     title: "Tag 3 friends in the comments",
     detail:
       "Nobody clears this place alone.\n\nThree names.\nNo alts. No strays.",
@@ -147,8 +179,8 @@ export const pinnedPostUrl = (postId?: string) =>
     ? `https://x.com/${X_ACCOUNT}/status/${postId}`
     : `https://x.com/${X_ACCOUNT}`;
 
-export const followUrl = () =>
-  `https://x.com/intent/follow?screen_name=${X_ACCOUNT}`;
+export const followUrl = (account: string = X_ACCOUNT) =>
+  `https://x.com/intent/follow?screen_name=${account}`;
 
 /**
  * The quote intent, carrying the poster's own referral link.
@@ -189,6 +221,7 @@ export function questLinkFor(
   referral?: string,
 ) {
   if (id === "follow") return followUrl();
+  if (id === "founder") return followUrl(FOUNDER_ACCOUNT);
   if (id === "quote") return quoteIntentUrl(postId, referral);
   return pinnedPostUrl(postId);
 }
@@ -199,6 +232,7 @@ export type QuestState = Record<QuestId, boolean | string>;
 
 export const EMPTY_QUESTS: QuestState = {
   follow: false,
+  founder: false,
   boost: false,
   quote: "",
   tag: false,
