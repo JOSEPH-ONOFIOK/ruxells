@@ -71,6 +71,14 @@ export type Piece = {
   /** Which world it comes from. */
   faction: Faction;
   /**
+   * A slot in a world that has not been filled yet.
+   *
+   * Every world is meant to hold twelve, and most hold fewer — Deep has one.
+   * Showing the gap rather than hiding it is what makes a world read as a
+   * set being assembled instead of however many pieces happen to exist.
+   */
+  locked?: boolean;
+  /**
    * The animated version, where one exists.
    *
    * Only three of the eighteen loose frames were ever animated — the rest
@@ -132,3 +140,44 @@ const FRAMES: Piece[] = FRAME_ORDER.map((n) => {
 
 /** Rooms first: they are the ones the site has already introduced. */
 export const PIECES: Piece[] = [...ROOMS, ...FRAMES];
+
+/** How many pieces a world is meant to hold. */
+export const FACTION_SIZE = 12;
+
+/**
+ * Everything, plus the empty slots each world is still short of.
+ *
+ * Built once rather than per render: the list never changes, and the token
+ * numbers have to be stable — a slot that renumbered itself on every render
+ * would not be a place in a catalogue.
+ *
+ * Numbered from 0901 upward so a placeholder can never be mistaken for one
+ * of the real frames, which run 0001 to 0018.
+ */
+export const WITH_LOCKED: Piece[] = (() => {
+  const out = [...PIECES];
+  let n = 901;
+
+  for (const f of FACTIONS) {
+    const have = PIECES.filter((p) => p.faction === f.id).length;
+
+    for (let i = have; i < FACTION_SIZE; i++) {
+      out.push({
+        id: `locked-${f.id}-${i}`,
+        // The art is never shown for these, but a src keeps the type honest
+        // and gives the grid something to size a cell against.
+        src: "/brand/mark-lime.png",
+        width: 334,
+        height: 334,
+        label: `#${String(n).padStart(4, "0")}`,
+        featured: false,
+        faction: f.id,
+        tint: f.tint,
+        locked: true,
+      });
+      n += 1;
+    }
+  }
+
+  return out;
+})();

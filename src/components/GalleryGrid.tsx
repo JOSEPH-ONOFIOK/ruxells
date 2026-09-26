@@ -3,8 +3,15 @@
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { FiChevronLeft, FiChevronRight, FiX } from "react-icons/fi";
-import { FACTIONS, PIECES, type Faction, type Piece } from "@/lib/gallery";
+import { FiChevronLeft, FiChevronRight, FiLock, FiX } from "react-icons/fi";
+import {
+  FACTIONS,
+  FACTION_SIZE,
+  PIECES,
+  WITH_LOCKED,
+  type Faction,
+  type Piece,
+} from "@/lib/gallery";
 
 /**
  * The collection, as a grid you can open.
@@ -41,12 +48,20 @@ export function GalleryGrid() {
   const [filter, setFilter] = useState<Filter>("all");
   const [open, setOpen] = useState<number | null>(null);
 
-  const shown = PIECES.filter((p) => {
-    if (filter === "all") return true;
-    if (filter === "rooms") return p.featured;
-    if (filter === "frames") return !p.featured;
-    return p.faction === filter;
-  });
+  /**
+   * What the grid is showing.
+   *
+   * A world shows all twelve of its slots, filled or not, because the point
+   * of picking one is to see the set. The three cuts above it draw from the
+   * real pieces only — "Everything" showing fifty empty boxes would be a
+   * worse answer to "show me the collection" than showing the collection.
+   */
+  const shown = useMemo(() => {
+    if (filter === "all") return PIECES;
+    if (filter === "rooms") return PIECES.filter((p) => p.featured);
+    if (filter === "frames") return PIECES.filter((p) => !p.featured);
+    return WITH_LOCKED.filter((p) => p.faction === filter);
+  }, [filter]);
 
   /**
    * Only the worlds that actually have pieces in them, with their counts: a
@@ -84,13 +99,28 @@ export function GalleryGrid() {
     setOpen(null);
   }, []);
 
-  // Paging wraps, so the arrows never dead-end on the first or last piece.
+  /**
+   * Paging wraps, so the arrows never dead-end on the first or last piece,
+   * and it steps over the empty slots.
+   *
+   * A world's grid is mostly unfilled places, and landing on one would show
+   * the lime mark at full size as though it were the artwork. The loop is
+   * bounded by the list length so a world with nothing in it cannot spin
+   * forever looking for something to land on.
+   */
   const step = useCallback(
     (by: number) =>
-      setOpen((i) =>
-        i === null ? null : (i + by + shown.length) % shown.length,
-      ),
-    [shown.length],
+      setOpen((i) => {
+        if (i === null) return null;
+
+        let next = i;
+        for (let tries = 0; tries < shown.length; tries++) {
+          next = (next + by + shown.length) % shown.length;
+          if (!shown[next]?.locked) return next;
+        }
+        return i;
+      }),
+    [shown],
   );
 
   /**
@@ -113,7 +143,7 @@ export function GalleryGrid() {
 
     for (const by of [1, -1]) {
       const neighbour = shown[(open + by + shown.length) % shown.length];
-      if (!neighbour) continue;
+      if (!neighbour || neighbour.locked) continue;
 
       // A GIF is served straight from public/ because the lightbox marks it
       // unoptimized, so warming an /_next/image URL for it would fetch a
@@ -177,7 +207,7 @@ export function GalleryGrid() {
               active={filter === f.id}
               onClick={() => choose(f.id)}
               label={f.name}
-              count={counts.get(f.id)}
+              count={`${counts.get(f.id) ?? 0}/${FACTION_SIZE}`}
               tint={f.tint}
             />
           ))}
@@ -288,6 +318,10 @@ function Tile({
   onOpen: () => void;
   eager: boolean;
 }) {
+  // A slot with nothing in it is not a button: there is nothing to open, and
+  // making it look pressable is a promise the grid cannot keep.
+  if (piece.locked) return <LockedTile piece={piece} />;
+
   return (
     <button
       type="button"
@@ -343,6 +377,31 @@ function Tile({
 }
 
 /**
+ * A slot a world has not filled yet.
+ *
+ * Numbered and otherwise silent. A label repeated fifty times across the
+ * grid would shout, and "coming soon" is a date nobody has committed to —
+ * an empty numbered box in a catalogue already says what it means.
+ */
+function LockedTile({ piece }: { piece: Piece }) {
+  return (
+    <div
+      className="block w-full shrink-0 overflow-hidden border-2 border-dashed"
+      style={{ borderColor: `${piece.tint ?? "#232a2e"}33` }}
+      aria-label={`${piece.label}, not yet revealed`}
+    >
+      <div className="relative flex aspect-square items-center justify-center bg-void/60">
+        <FiLock className="h-3.5 w-3.5 text-ash/40" />
+
+        <span className="absolute bottom-2 left-2.5 font-mono text-[10px] text-ash/40 tabular-nums">
+          {piece.label}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
  * One filter chip.
  *
  * A world's chip carries its own colour on the border when it is not the
@@ -359,7 +418,7 @@ function Chip({
   active: boolean;
   onClick: () => void;
   label: string;
-  count?: number;
+  count?: string;
   tint?: string;
 }) {
   return (
