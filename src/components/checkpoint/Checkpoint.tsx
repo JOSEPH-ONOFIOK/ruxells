@@ -325,7 +325,7 @@ function Overlay({
 
   return (
     <motion.div
-      className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto p-4 sm:p-8"
+      className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto px-4 pt-14 pb-4 sm:px-8 sm:pt-16 sm:pb-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -339,6 +339,22 @@ function Overlay({
         onClick={onClose}
         className="absolute inset-0 bg-void/80 backdrop-blur-sm"
       />
+      {/* The way home stays put over a verdict: same spot and size as the
+          header's, so it reads as the header showing through, not a new
+          control. */}
+      <Link
+        href="/"
+        aria-label="RUXXELLS home"
+        className="absolute top-4 left-4 z-10 sm:top-6 sm:left-6"
+      >
+        <Image
+          src="/brand/wordmark-lime.png"
+          alt="RUXXELLS"
+          width={866}
+          height={245}
+          className="pixelated h-4 w-auto"
+        />
+      </Link>
       {children}
     </motion.div>
   );
