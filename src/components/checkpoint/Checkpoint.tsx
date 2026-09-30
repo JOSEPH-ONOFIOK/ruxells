@@ -23,7 +23,7 @@ import {
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 const CARD = "/brand/ruxlisted.webp";
-/** The GIF is what gets posted: X takes it animated, up to 15 MB. */
+/** The GIF is what gets saved to attach: X takes it animated, up to 15 MB. */
 const CARD_GIF = "/brand/ruxlisted.gif";
 
 type Verdict = "unknown" | "listed" | "not-listed" | "error";
@@ -32,12 +32,12 @@ type Stage = "idle" | "knocking" | "open" | "shut";
 export function Checkpoint({
   account,
   oauthStatus,
-  shareText,
+  shareUrl,
   signupsOpen,
 }: {
   account: XAccountState;
   oauthStatus: string | null;
-  shareText: string;
+  shareUrl: string;
   signupsOpen: boolean;
 }) {
   const x = useXAccount(account);
@@ -297,7 +297,7 @@ export function Checkpoint({
       />
       <Reveal
         open={stage === "open"}
-        shareText={shareText}
+        shareUrl={shareUrl}
         onClose={() => setStage("idle")}
       />
     </main>
@@ -426,15 +426,13 @@ function Shut({
 
 function Reveal({
   open,
-  shareText,
+  shareUrl,
   onClose,
 }: {
   open: boolean;
-  shareText: string;
+  shareUrl: string;
   onClose: () => void;
 }) {
-  const [sharing, setSharing] = useState(false);
-
   const download = () => {
     const a = document.createElement("a");
     a.href = CARD_GIF;
@@ -442,40 +440,6 @@ function Reveal({
     document.body.appendChild(a);
     a.click();
     a.remove();
-  };
-
-  /**
-   * Posting with the card attached.
-   *
-   * X's intent link takes text only, never an image. Where the share sheet
-   * accepts files — phones, mostly — the card goes in with the caption and
-   * lands in the X app attached. Everywhere else the card is saved and the
-   * composer opens with the caption, so attaching it is one drag.
-   */
-  const post = async () => {
-    setSharing(true);
-    try {
-      if (typeof navigator.canShare === "function") {
-        const blob = await fetch(CARD_GIF).then((r) => r.blob());
-        const file = new File([blob], "ruxlisted.gif", { type: "image/gif" });
-        if (navigator.canShare({ files: [file] })) {
-          try {
-            await navigator.share({ files: [file], text: shareText });
-          } catch {
-            // Cancelled from the sheet: nothing to fall back to.
-          }
-          return;
-        }
-      }
-      download();
-      window.open(
-        `https://x.com/intent/post?text=${encodeURIComponent(shareText)}`,
-        "_blank",
-        "noopener,noreferrer",
-      );
-    } finally {
-      setSharing(false);
-    }
   };
 
   return (
@@ -512,15 +476,18 @@ function Reveal({
             </h2>
 
             <div className="mt-5 flex flex-wrap justify-center gap-3">
-              <button
-                type="button"
-                onClick={post}
-                disabled={sharing}
-                className="pressable inline-flex items-center gap-2 border-2 border-lime bg-lime px-5 py-3 text-[11px] font-bold tracking-widest text-void uppercase shadow-[3px_3px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime disabled:opacity-60"
+              {/* A quote of the team's post, in X's own composer. The intent
+                  link carries text and the quoted post but never an image,
+                  which is why saving the card sits beside it. */}
+              <a
+                href={shareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pressable inline-flex items-center gap-2 border-2 border-lime bg-lime px-5 py-3 text-[11px] font-bold tracking-widest text-void uppercase shadow-[3px_3px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
               >
-                {sharing ? "Preparing…" : "Post it on X"}
+                Quote on X
                 <FiArrowUpRight className="h-3.5 w-3.5" />
-              </button>
+              </a>
               <button
                 type="button"
                 onClick={download}
@@ -530,6 +497,11 @@ function Reveal({
                 <FiDownload className="h-3.5 w-3.5" />
               </button>
             </div>
+
+            <p className="mt-4 max-w-xs text-center text-xs leading-relaxed text-chalk">
+              <span className="text-lime">Screenshot the card</span> (or save
+              it) and add it to your post before you send.
+            </p>
 
             <button
               type="button"

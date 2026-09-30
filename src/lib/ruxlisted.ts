@@ -1,5 +1,10 @@
 import { hasXUser } from "./allowlist-store";
-import { X_ACCOUNT } from "./quests";
+import {
+  PINNED_POST_ID,
+  X_ACCOUNT,
+  parsePostIds,
+  pinnedPostUrl,
+} from "./quests";
 import { DROP } from "./sectors";
 import type { XAccount } from "./x-session";
 
@@ -56,3 +61,18 @@ A Ruxxell has been reserved for me.
 1 of ${DROP.supply} worlds. I secured mine.
 
 @${X_ACCOUNT}`;
+
+/**
+ * The composer, opened as a quote of the team's post with the caption in.
+ *
+ * `RUXLISTED_POST` (a URL or bare id) names the post to quote — the
+ * RUXLISTED announcement, once there is one. Unset, it falls back to the
+ * pinned post the clearance quest quotes. Server-only: the page reads it at
+ * request time, so changing it on the host needs no rebuild of the client.
+ */
+export function shareUrl(): string {
+  const postId = parsePostIds(process.env.RUXLISTED_POST)[0] ?? PINNED_POST_ID;
+  return `https://x.com/intent/post?text=${encodeURIComponent(SHARE_TEXT)}${
+    postId ? `&url=${encodeURIComponent(pinnedPostUrl(postId))}` : ""
+  }`;
+}

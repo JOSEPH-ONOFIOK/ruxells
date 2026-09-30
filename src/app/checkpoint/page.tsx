@@ -1,6 +1,6 @@
 import { Checkpoint } from "@/components/checkpoint/Checkpoint";
 import { signupsOpen } from "@/lib/allowlist-status";
-import { SHARE_TEXT } from "@/lib/ruxlisted";
+import { shareUrl } from "@/lib/ruxlisted";
 import { currentAccount } from "@/lib/x-session";
 
 const DESCRIPTION =
@@ -47,7 +47,7 @@ export default async function CheckpointPage({
         name: account?.name,
       }}
       oauthStatus={typeof params.x === "string" ? params.x : null}
-      shareText={SHARE_TEXT}
+      shareUrl={shareUrl()}
       signupsOpen={signupsOpen()}
     />
   );

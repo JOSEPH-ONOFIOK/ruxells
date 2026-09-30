@@ -65,7 +65,7 @@ Join →`;
  * value is a post id, which is public the moment it is posted, so there is
  * nothing here that should not reach the browser.
  */
-function parsePostIds(raw: string | undefined): readonly string[] {
+export function parsePostIds(raw: string | undefined): readonly string[] {
   if (!raw) return [];
 
   return raw
