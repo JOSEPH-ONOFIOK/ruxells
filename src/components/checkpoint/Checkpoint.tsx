@@ -26,8 +26,8 @@ const CARD = "/brand/ruxlisted.webp";
 /** The GIF is what gets saved to attach: X takes it animated, up to 15 MB. */
 const CARD_GIF = "/brand/ruxlisted.gif";
 
-type Verdict = "unknown" | "listed" | "not-listed" | "error";
-type Stage = "idle" | "knocking" | "open" | "shut";
+type Verdict = "unknown" | "listed" | "pending" | "none" | "error";
+type Stage = "idle" | "knocking" | "open" | "pending" | "shut";
 
 export function Checkpoint({
   account,
@@ -54,7 +54,10 @@ export function Checkpoint({
       .then(async (res) => {
         if (!res.ok) return "error" as const;
         const data = await res.json();
-        return data.listed ? ("listed" as const) : ("not-listed" as const);
+        const s = data.standing;
+        return s === "listed" || s === "pending" || s === "none"
+          ? (s as Verdict)
+          : ("error" as const);
       })
       .catch(() => "error" as const)
       .then((v) => {
@@ -89,7 +92,15 @@ export function Checkpoint({
       ask(),
       new Promise((r) => setTimeout(r, reduced ? 0 : 900)),
     ]);
-    setStage(v === "listed" ? "open" : v === "not-listed" ? "shut" : "idle");
+    setStage(
+      v === "listed"
+        ? "open"
+        : v === "pending"
+          ? "pending"
+          : v === "none"
+            ? "shut"
+            : "idle",
+    );
   };
 
   const lit = x.connected && stage !== "shut";
@@ -289,6 +300,11 @@ export function Checkpoint({
         )}
       </AnimatePresence>
 
+      <Pending
+        open={stage === "pending"}
+        username={x.username}
+        onClose={() => setStage("idle")}
+      />
       <Shut
         open={stage === "shut"}
         username={x.username}
@@ -360,6 +376,80 @@ function Overlay({
   );
 }
 
+/**
+ * Applied, not yet approved.
+ *
+ * The form told these people they were cleared, and they were: the door
+ * says the same thing back, in the lime of the list rather than the red of a
+ * refusal, and does not send them to a form that will only tell them they
+ * have already applied.
+ */
+function Pending({
+  open,
+  username,
+  onClose,
+}: {
+  open: boolean;
+  username?: string;
+  onClose: () => void;
+}) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <Overlay label="Cleared, awaiting approval" onClose={onClose}>
+          <motion.div
+            className="panel ticked relative w-full max-w-sm p-6"
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ duration: 0.35, ease: EASE }}
+          >
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute top-3 right-3 flex h-9 w-9 items-center justify-center text-ash transition-colors hover:text-chalk"
+            >
+              <FiX className="h-4 w-4" />
+            </button>
+
+            <motion.p
+              className="wordmark inline-block -rotate-3 border-4 border-lime px-3 py-1 text-xl text-lime"
+              initial={{ opacity: 0, scale: 2 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.25, type: "spring", stiffness: 500, damping: 22 }}
+            >
+              Cleared
+            </motion.p>
+
+            <h2 className="wordmark mt-5 text-2xl text-chalk">
+              Awaiting approval
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-ash">
+              {username ? <span className="text-chalk">@{username}</span> : "This account"}{" "}
+              is cleared and on her sheet, awaiting approval. There is nothing
+              more to do: approvals are announced on X, and the door will open
+              for you here once you are through.
+            </p>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <a
+                href="https://x.com/ruxxellsHQ"
+                target="_blank"
+                rel="noreferrer"
+                className="pressable inline-flex items-center gap-2 border-2 border-lime bg-lime px-5 py-3 text-[11px] font-bold tracking-widest text-void uppercase shadow-[3px_3px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
+              >
+                Watch @ruxxellsHQ
+                <FiArrowUpRight className="h-3.5 w-3.5" />
+              </a>
+            </div>
+          </motion.div>
+        </Overlay>
+      )}
+    </AnimatePresence>
+  );
+}
+
 function Shut({
   open,
   username,
@@ -408,7 +498,7 @@ function Shut({
             <p className="mt-3 text-sm leading-relaxed text-ash">
               She checked twice.{" "}
               {username ? <span className="text-chalk">@{username}</span> : "This account"}{" "}
-              is not RUXLISTED.
+              has not applied.
               {signupsOpen
                 ? " The list is still open, and four steps is all it takes."
                 : " The list has closed. Keep an eye on the account for what comes next."}

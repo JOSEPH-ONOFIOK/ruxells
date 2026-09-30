@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isRuxlisted } from "@/lib/ruxlisted";
+import { standing } from "@/lib/ruxlisted";
 import { currentAccount } from "@/lib/x-session";
 
 /**
@@ -17,7 +17,7 @@ export async function GET() {
   }
 
   try {
-    return NextResponse.json({ listed: await isRuxlisted(account) });
+    return NextResponse.json({ standing: await standing(account) });
   } catch (err) {
     console.error("[ruxlisted]", err instanceof Error ? err.message : err);
     return NextResponse.json(

@@ -62,10 +62,10 @@ async function submitToLocalFile(sub: Submission): Promise<SubmitResult> {
   const entries = await readLocalEntries();
 
   if (entries.some((e) => e.wallet.toLowerCase() === sub.wallet.toLowerCase())) {
-    return { error: "That wallet is already cleared." };
+    return { error: "That wallet has already applied. You’re cleared and awaiting approval." };
   }
   if (sub.xUserId && entries.some((e) => e.xUserId === sub.xUserId)) {
-    return { error: "That X account is already cleared." };
+    return { error: "You’ve already applied. You’re cleared and awaiting approval." };
   }
 
   const clearanceCode = newClearanceCode();
@@ -109,10 +109,10 @@ async function submitToSheet(
     return { error: "Every spot is taken." };
   }
   if (data.error === "duplicate") {
-    return { error: "That wallet is already cleared." };
+    return { error: "That wallet has already applied. You’re cleared and awaiting approval." };
   }
   if (data.error === "duplicate_x") {
-    return { error: "That X account is already cleared." };
+    return { error: "You’ve already applied. You’re cleared and awaiting approval." };
   }
   if (data.error) throw new Error(String(data.error));
 

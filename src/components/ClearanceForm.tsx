@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import {
   useEffect,
   useMemo,
@@ -392,9 +393,9 @@ function Receipt({
       </div>
 
       <div className="p-6 sm:p-8">
-      <p className="eyebrow text-lime">Clearance granted</p>
+      <p className="eyebrow text-lime">Cleared</p>
       <p className="wordmark mt-3 text-[clamp(1.8rem,7vw,2.8rem)] text-chalk">
-        You&rsquo;re in
+        Awaiting approval
       </p>
 
       <div className="mt-6 border border-dashed border-line bg-void p-4">
@@ -430,7 +431,11 @@ function Receipt({
       </a>
 
         <p className="mt-4 text-[11px] leading-relaxed text-ash">
-          Screenshot this. Mint details go out on X.
+          Screenshot this. Approvals are announced on X, and the{" "}
+          <Link href="/checkpoint" className="text-lime underline-offset-2 hover:underline">
+            Checkpoint
+          </Link>{" "}
+          tells you once you&rsquo;re through.
         </p>
       </div>
     </motion.div>

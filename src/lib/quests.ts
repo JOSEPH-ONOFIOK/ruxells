@@ -237,7 +237,7 @@ export const quoteIntentUrl = (postId?: string, referral?: string) => {
  * Offered the moment the spot is theirs, because that is when they are most
  * willing to say so — a share asked for later is a share that doesn't happen.
  */
-export const CLAIM_SHARE_TEXT = `Cleared for @${X_ACCOUNT}`;
+export const CLAIM_SHARE_TEXT = `Cleared and awaiting approval for @${X_ACCOUNT}`;
 
 export const claimShareUrl = (siteUrl?: string) =>
   `https://x.com/intent/post?text=${encodeURIComponent(CLAIM_SHARE_TEXT)}${

@@ -42,15 +42,28 @@ function curated(): Set<string> | null {
   );
 }
 
-export async function isRuxlisted(account: XAccount): Promise<boolean> {
-  if (ALWAYS.has(account.id)) return true;
+/**
+ * Where an account stands.
+ *
+ * - `listed`: approved, through the door.
+ * - `pending`: finished clearance and is on the sheet, but not (yet) on the
+ *   curated list. These people were told "cleared" by the form, so the door
+ *   must say so too, rather than telling them to go and apply.
+ * - `none`: never applied.
+ */
+export type Standing = "listed" | "pending" | "none";
+
+export async function standing(account: XAccount): Promise<Standing> {
+  if (ALWAYS.has(account.id)) return "listed";
 
   const list = curated();
-  if (list) {
-    return list.has(account.id) || list.has(account.username.toLowerCase());
+  if (list && (list.has(account.id) || list.has(account.username.toLowerCase()))) {
+    return "listed";
   }
 
-  return hasXUser(account.id);
+  const applied = await hasXUser(account.id);
+  if (!list) return applied ? "listed" : "none";
+  return applied ? "pending" : "none";
 }
 
 /** What the card is posted with, word for word as the team wrote it. */
