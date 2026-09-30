@@ -48,12 +48,20 @@ export default function Gallery() {
           />
         </Link>
 
-        <Link
-          href="/clearance"
-          className="pressable border-2 border-lime bg-lime px-4 py-2.5 text-[11px] font-bold tracking-widest text-void uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
-        >
-          Get cleared
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/checkpoint"
+            className="eyebrow text-ash transition-colors hover:text-lime"
+          >
+            Checkpoint
+          </Link>
+          <Link
+            href="/clearance"
+            className="pressable border-2 border-lime bg-lime px-4 py-2.5 text-[11px] font-bold tracking-widest text-void uppercase shadow-[2px_2px_0_0_rgba(0,0,0,0.55)] transition-colors hover:bg-transparent hover:text-lime"
+          >
+            Get cleared
+          </Link>
+        </div>
       </nav>
 
       <header className="mb-8">

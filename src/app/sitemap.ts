@@ -16,5 +16,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
       // map rather than treated as a secondary route.
       priority: 0.9,
     },
+    {
+      url: `${SITE_URL}/checkpoint`,
+      changeFrequency: "daily",
+      priority: 0.8,
+    },
   ];
 }

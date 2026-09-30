@@ -67,12 +67,20 @@ export function World({
           />
         </Link>
 
-        <Link
-          href="/gallery"
-          className="eyebrow px-1 text-ash transition-colors hover:text-lime"
-        >
-          Gallery
-        </Link>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/checkpoint"
+            className="eyebrow px-1 text-lime transition-colors hover:text-chalk"
+          >
+            Checkpoint
+          </Link>
+          <Link
+            href="/gallery"
+            className="eyebrow px-1 text-ash transition-colors hover:text-lime"
+          >
+            Gallery
+          </Link>
+        </div>
       </header>
 
       <main className="relative z-10">

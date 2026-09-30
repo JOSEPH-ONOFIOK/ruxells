@@ -92,12 +92,20 @@ export default async function Clearance({
             </Link>
           </div>
 
-          <Link
-            href="/"
-            className="eyebrow shrink-0 text-ash transition-colors hover:text-lime"
-          >
-            ← The map
-          </Link>
+          <div className="flex shrink-0 items-center gap-4">
+            <Link
+              href="/checkpoint"
+              className="eyebrow text-ash transition-colors hover:text-lime"
+            >
+              Checkpoint
+            </Link>
+            <Link
+              href="/"
+              className="eyebrow text-ash transition-colors hover:text-lime"
+            >
+              ← The map
+            </Link>
+          </div>
         </nav>
 
         {/* The crew, as a reminder of what the list is for. Sits above the
