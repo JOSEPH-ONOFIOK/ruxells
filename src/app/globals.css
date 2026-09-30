@@ -293,6 +293,34 @@ body {
   animation: blink 1.06s steps(1) infinite;
 }
 
+/**
+ * The checkpoint door, once there is someone at it to let through: a green
+ * light breathing behind the frame. Slow enough to read as waiting rather
+ * than as an alarm.
+ */
+@keyframes door-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.96);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.04);
+  }
+}
+
+.door-pulse {
+  animation: door-pulse 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .door-pulse {
+    animation: none;
+    opacity: 0.6;
+  }
+}
+
 @keyframes sweep {
   from {
     transform: translateY(-100%);

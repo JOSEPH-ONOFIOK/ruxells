@@ -144,6 +144,25 @@ async function countSheetEntries(webAppUrl: string) {
   return Number(data.count ?? 0);
 }
 
+/**
+ * Whether one X account has a row in the sheet.
+ *
+ * Throws rather than answering no when the script predates `?x`: a script
+ * that has not been redeployed answers every GET with `{count}`, and reading
+ * that as "not listed" would turn away everyone who is.
+ */
+async function sheetHasXUser(webAppUrl: string, xUserId: string) {
+  const url = new URL(webAppUrl);
+  url.searchParams.set("x", xUserId);
+  const res = await fetch(url, { method: "GET", cache: "no-store" });
+  if (!res.ok) throw new Error(`Sheets webhook returned ${res.status}`);
+  const data = await res.json();
+  if (typeof data.listed !== "boolean") {
+    throw new Error("Sheet script has no ?x lookup; redeploy it (version 4).");
+  }
+  return data.listed;
+}
+
 // --- public API -------------------------------------------------------
 
 export async function submitEntry(sub: Submission): Promise<SubmitResult> {
@@ -154,4 +173,11 @@ export async function submitEntry(sub: Submission): Promise<SubmitResult> {
 export async function countEntries(): Promise<number> {
   const url = process.env.GOOGLE_SHEETS_WEBAPP_URL;
   return url ? countSheetEntries(url) : (await readLocalEntries()).length;
+}
+
+export async function hasXUser(xUserId: string): Promise<boolean> {
+  const url = process.env.GOOGLE_SHEETS_WEBAPP_URL;
+  return url
+    ? sheetHasXUser(url, xUserId)
+    : (await readLocalEntries()).some((e) => e.xUserId === xUserId);
 }

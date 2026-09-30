@@ -8,6 +8,7 @@
  * Contract with src/lib/allowlist-store.ts:
  *
  *   GET  ->  { count: number }
+ *   GET  ?x=<X user id>  ->  { listed: boolean }
  *   POST {handle, wallet, xUserId, quoteLink, inviteCode, referredBy}
  *        ->  { position: number }       on success
  *        ->  { error: "duplicate" }     wallet already listed
@@ -29,7 +30,7 @@
  * rather than guessed at from behaviour — Apps Script silently keeps serving
  * the old copy if a deployment is not updated, and that is very hard to spot.
  */
-var SCRIPT_VERSION = 3;
+var SCRIPT_VERSION = 4;
 
 /** Tab the entries live on. Created on first write if missing. */
 var SHEET_NAME = 'Clearance';
@@ -101,6 +102,13 @@ function doGet(e) {
     // counting rows by hand is how a published number ends up wrong.
     if (p.referrals !== undefined) {
       return json({ referrals: countReferrals() });
+    }
+
+    // ?x=<id> answers whether one X account is on the list — what the
+    // checkpoint door asks. A yes or no, never the row: the id arrives from
+    // the site's session, but the answer should not leak anything else.
+    if (p.x !== undefined) {
+      return json({ listed: isListed(String(p.x).trim()) });
     }
 
     // What the site polls for the "N through the door" counter.
@@ -241,6 +249,22 @@ function getSheet() {
   }
 
   return sheet;
+}
+
+/** Whether an X user id has a row. One column read, like the others. */
+function isListed(xUserId) {
+  if (!xUserId) return false;
+  var sheet = getSheet();
+  var rows = sheet.getLastRow() - 1;
+  if (rows < 1) return false;
+
+  var col = HEADERS.indexOf('X User ID') + 1;
+  var values = sheet.getRange(2, col, rows, 1).getValues();
+
+  for (var i = 0; i < values.length; i++) {
+    if (String(values[i][0] || '').trim() === xUserId) return true;
+  }
+  return false;
 }
 
 function countEntries() {

@@ -49,3 +49,6 @@ next-env.d.ts
 # Local allowlist submissions. The development fallback store writes real
 # wallet addresses and X handles here; production uses the Sheets web app.
 /data
+
+# Allowlist exports: every entrant's wallet. Never committed.
+scripts/*.csv

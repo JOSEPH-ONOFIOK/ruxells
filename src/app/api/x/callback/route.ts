@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  RETURN_COOKIE,
   STATE_COOKIE,
   VERIFIER_COOKIE,
   exchangeCode,
   fetchMe,
+  returnPath,
   xConfig,
 } from "@/lib/x-oauth";
 import {
@@ -12,17 +14,21 @@ import {
   serializeAccount,
 } from "@/lib/x-session";
 
-function back(origin: string, status: string) {
-  return NextResponse.redirect(new URL(`/clearance?x=${status}`, origin));
-}
-
 export async function GET(req: NextRequest) {
   const origin = req.nextUrl.origin;
+  // Checked against the same list the login route wrote it from: a cookie is
+  // still input, and this one decides where a redirect goes.
+  const to = returnPath(req.cookies.get(RETURN_COOKIE)?.value);
+  const back = (status: string) => {
+    const res = NextResponse.redirect(new URL(`${to}?x=${status}`, origin));
+    res.cookies.delete(RETURN_COOKIE);
+    return res;
+  };
   const config = xConfig(origin);
-  if (!config) return back(origin, "unconfigured");
+  if (!config) return back("unconfigured");
 
   const params = req.nextUrl.searchParams;
-  if (params.get("error")) return back(origin, "denied");
+  if (params.get("error")) return back("denied");
 
   const code = params.get("code");
   const state = params.get("state");
@@ -36,14 +42,14 @@ export async function GET(req: NextRequest) {
     !verifier ||
     state !== expectedState
   ) {
-    return back(origin, "badstate");
+    return back("badstate");
   }
 
   try {
     const token = await exchangeCode(config, code, verifier);
     const user = await fetchMe(token);
 
-    const res = back(origin, "connected");
+    const res = back("connected");
     res.cookies.set(
       SESSION_COOKIE,
       serializeAccount({
@@ -69,6 +75,6 @@ export async function GET(req: NextRequest) {
      * in the thrown error.
      */
     console.error("[x/callback]", err instanceof Error ? err.message : err);
-    return back(origin, "failed");
+    return back("failed");
   }
 }

@@ -10,6 +10,20 @@ export const SCOPES = ["users.read", "tweet.read"];
 
 export const STATE_COOKIE = "rux_x_state";
 export const VERIFIER_COOKIE = "rux_x_verifier";
+export const RETURN_COOKIE = "rux_x_return";
+
+/**
+ * Where the OAuth round trip may land.
+ *
+ * A fixed list rather than any path: the return target arrives in a query
+ * string, and an open redirect on the login route is a phishing link with
+ * this domain on it.
+ */
+const RETURN_PATHS = ["/clearance", "/checkpoint"] as const;
+
+export function returnPath(raw: string | null | undefined): string {
+  return RETURN_PATHS.find((p) => p === raw) ?? "/clearance";
+}
 
 export type XConfig = {
   clientId: string;

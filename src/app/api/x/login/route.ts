@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  RETURN_COOKIE,
   STATE_COOKIE,
   VERIFIER_COOKIE,
   authorizeUrl,
   newState,
   newVerifier,
+  returnPath,
   xConfig,
 } from "@/lib/x-oauth";
 
@@ -12,7 +14,10 @@ export async function GET(req: NextRequest) {
   const config = xConfig(req.nextUrl.origin);
   if (!config) {
     return NextResponse.redirect(
-      new URL("/clearance?x=unconfigured", req.nextUrl.origin),
+      new URL(
+        `${returnPath(req.nextUrl.searchParams.get("next"))}?x=unconfigured`,
+        req.nextUrl.origin,
+      ),
     );
   }
 
@@ -33,6 +38,12 @@ export async function GET(req: NextRequest) {
 
   res.cookies.set(STATE_COOKIE, state, options);
   res.cookies.set(VERIFIER_COOKIE, verifier, options);
+  // Which page sent them, so the callback can put them back there.
+  res.cookies.set(
+    RETURN_COOKIE,
+    returnPath(req.nextUrl.searchParams.get("next")),
+    options,
+  );
 
   return res;
 }
