@@ -50,11 +50,11 @@ export const DROP = {
    * to arrive as long as the first.
    *
    * ==> SET THIS ON LAUNCH DAY. It currently reads 72 hours from when the
-   * change was made, plus 12- and 24-hour extensions, which is only the right
+   * change was made, plus later extensions, which is only the right
    * answer if the list opened that day. Every countdown on the site reads
    * from it and flips to closed on its own once it passes.
    */
-  closesAt: "2026-09-30T22:00:00Z",
+  closesAt: "2026-10-01T16:00:00Z",
 } as const;
 
 /** The headline the drop is announced with. */
