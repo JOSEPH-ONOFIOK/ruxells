@@ -152,10 +152,14 @@ export default async function Clearance({
           <div className="panel ticked p-8 text-center">
             <p className="eyebrow text-ash">Door closed</p>
             <p className="wordmark mt-3 text-3xl text-chalk">
-              The list is full
+              Applications are closed
             </p>
             <p className="mx-auto mt-4 max-w-sm text-sm leading-relaxed text-ash">
-              Every spot is spoken for. Watch X for what happens next.
+              Already applied? Knock at the{" "}
+              <Link href="/checkpoint" className="text-lime hover:underline">
+                Checkpoint
+              </Link>{" "}
+              to see where you stand. Watch X for what happens next.
             </p>
           </div>
         )}

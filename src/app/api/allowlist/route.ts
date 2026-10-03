@@ -48,7 +48,7 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   if (!signupsOpen()) {
     return NextResponse.json(
-      { error: "Clearance is closed. Every spot is taken." },
+      { error: "Clearance is closed. Applications are no longer being taken." },
       { status: 403 },
     );
   }
