@@ -54,7 +54,7 @@ export const DROP = {
    * answer if the list opened that day. Every countdown on the site reads
    * from it and flips to closed on its own once it passes.
    */
-  closesAt: "2026-10-04T19:00:00Z",
+  closesAt: "2026-10-05T07:00:00Z",
 } as const;
 
 /** The headline the drop is announced with. */
